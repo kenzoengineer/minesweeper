@@ -9,24 +9,34 @@ import {
   Statistics,
 } from "./game";
 
-export type StepResult = "won" | "lost" | "progress";
+export type StepResult = "won" | "lost" | "progress" | "stuck";
 
 export class Solver {
   // stack grows down [top, 1, 2, bottom]
   stack: CellData[] = [];
-  // tiles already pushed onto the queue, keyed "x,y", so we never reprocess one
-  seen = new Set<string>();
+  // tiles currently waiting in the queue, keyed "x,y", to avoid duplicate
+  // entries. Unlike a permanent "seen" set, a tile can be re-queued later once
+  // a neighbouring flag/reveal changes its situation.
+  inQueue = new Set<string>();
   board: MinesweeperBoard = [];
+  // when false, the solver only makes forced moves and stops ("stuck") instead
+  // of guessing a random tile
+  allowGuessing = false;
   statistics: Statistics = {
     leftClicks: 0,
     rightClicks: 0,
     chords: 0,
   };
-  constructor(board: MinesweeperBoard, statistics: Statistics) {
+  constructor(
+    board: MinesweeperBoard,
+    statistics: Statistics,
+    allowGuessing = false,
+  ) {
     this.stack = [];
-    this.seen = new Set();
+    this.inQueue = new Set();
     this.board = board;
     this.statistics = statistics;
+    this.allowGuessing = allowGuessing;
   }
 
   peek() {
@@ -35,16 +45,20 @@ export class Solver {
   }
 
   take() {
-    return this.stack.shift();
+    const cell = this.stack.shift();
+    if (cell) {
+      this.inQueue.delete(`${cell.x},${cell.y}`);
+    }
+    return cell;
   }
 
-  // push a frontier tile, ignoring ones we've already queued
+  // push a frontier tile, skipping ones already waiting in the queue
   private enqueue(cell: CellData) {
     const key = `${cell.x},${cell.y}`;
-    if (this.seen.has(key)) {
+    if (this.inQueue.has(key)) {
       return;
     }
-    this.seen.add(key);
+    this.inQueue.add(key);
     this.stack.push(cell);
   }
 
@@ -75,6 +89,17 @@ export class Solver {
     return hidden[Math.floor(Math.random() * hidden.length)];
   }
 
+  private anyRevealed() {
+    for (const row of this.board) {
+      for (const cell of row) {
+        if (cell.revealed) {
+          return true;
+        }
+      }
+    }
+    return false;
+  }
+
   private mineRevealed() {
     for (const row of this.board) {
       for (const cell of row) {
@@ -98,7 +123,9 @@ export class Solver {
   }
 
   // one iteration of the loop:
-  //  - queue empty  -> reveal a random tile (a guess)
+  //  - queue empty  -> reveal a random tile (a guess), unless guessing is
+  //                    disabled, in which case stop ("stuck"). The mandatory
+  //                    opening reveal on an untouched board is always allowed.
   //  - otherwise    -> run move_simple on the next queued tile
   // either way, tiles newly revealed by the action join the queue
   step(): StepResult {
@@ -107,6 +134,11 @@ export class Solver {
 
     clearNew(this.board);
     if (this.stack.length === 0) {
+      // no forced moves left; only reveal if we're allowed to guess (or this
+      // is the mandatory opening on an untouched board)
+      if (!this.allowGuessing && this.anyRevealed()) {
+        return "stuck";
+      }
       const target = this.randomHidden();
       if (!target) return "won";
       revealHelper(target.x, target.y, this.board, this.statistics);
@@ -134,10 +166,18 @@ export class Solver {
     const { valid, revealed, flagged } = getCounts(cell.x, cell.y, this.board);
     // remaining tiles == mine count
     if (cell.value == valid - revealed) {
-      // flag all revealed
+      // every hidden neighbour is a mine: flag them
       for (const { cell: c } of neighbors(cell.x, cell.y, this.board)) {
-        if (!c.flagged) {
-          flag(c.x, c.y, this.board);
+        if (c.flagged || c.revealed) {
+          continue;
+        }
+        flag(c.x, c.y, this.board);
+        // flagging c changes the mine math for every revealed number touching
+        // it, so mark those "new" to give them another move_simple pass
+        for (const { cell: n } of neighbors(c.x, c.y, this.board)) {
+          if (n.revealed && n.value > 0) {
+            n.new = true;
+          }
         }
       }
     }
