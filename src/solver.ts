@@ -62,15 +62,39 @@ export class Solver {
     this.stack.push(cell);
   }
 
-  // add every tile flagged "new" by the last action to the queue
-  private enqueueNew() {
+  // enqueue every revealed number that currently has a forced move available.
+  // Re-scanning after each action means a number is reconsidered whenever a
+  // neighbouring reveal or flag changes its counts — so no forced flag/reveal
+  // is ever left on the board.
+  private enqueueActionable() {
     for (const row of this.board) {
       for (const cell of row) {
-        if (cell.new) {
+        if (cell.revealed && cell.value > 0 && this.hasForcedMove(cell)) {
           this.enqueue(cell);
         }
       }
     }
+  }
+
+  // true if `cell` has hidden neighbours that move_simple can act on: either
+  // every unrevealed neighbour is a mine (flag them) or all its mines are
+  // already flagged (reveal the rest)
+  private hasForcedMove(cell: CellData) {
+    const { valid, revealed, flagged } = getCounts(cell.x, cell.y, this.board);
+    const unrevealed = valid - revealed; // flagged + hidden-unflagged
+    const hidden = unrevealed - flagged; // hidden and unflagged
+    if (hidden === 0) {
+      return false; // nothing left to flag or reveal
+    }
+    // all remaining unrevealed neighbours are mines -> flag the hidden ones
+    if (cell.value === unrevealed) {
+      return true;
+    }
+    // all mines already flagged -> the hidden ones are safe to reveal
+    if (cell.value === flagged) {
+      return true;
+    }
+    return false;
   }
 
   // a random unrevealed, unflagged tile (a guess), or null if none remain
@@ -127,7 +151,7 @@ export class Solver {
   //                    disabled, in which case stop ("stuck"). The mandatory
   //                    opening reveal on an untouched board is always allowed.
   //  - otherwise    -> run move_simple on the next queued tile
-  // either way, tiles newly revealed by the action join the queue
+  // after the action, every number with a forced move is (re)queued
   step(): StepResult {
     if (this.mineRevealed()) return "lost";
     if (this.allSafeRevealed()) return "won";
@@ -150,7 +174,7 @@ export class Solver {
       // resolve a fresh reference: clearNew replaces cell objects each action
       this.move_simple(this.board[queued.y][queued.x]);
     }
-    this.enqueueNew();
+    this.enqueueActionable();
 
     if (this.mineRevealed()) return "lost";
     if (this.allSafeRevealed()) return "won";

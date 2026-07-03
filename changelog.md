@@ -1,0 +1,16 @@
+- make minesweeper
+- code a simple one cell solver:
+  - COND 1: if a cell's value == flags around it, clear all unrevealed, unflagged tiles
+  - COND 2: if a cell's value == flags around it + unrevealed tiles, flag all unrevealed tiles
+- now we can run our solve:
+  - open a random cell
+  - add all "new" tiles to the queue
+  - take something off the queue:
+    - run the simple one cell solver
+    - all revealed tiles get added onto the queue
+    - repeat
+  -
+- Optimization #1:
+  - if we flag a tile, surrounding cells should also be added to th queue because their effective mine count changed
+- Optimization #2:
+  - if we reveal a tile, neighbouring cells may now have COND 2 fulfilled, so we need to add it to the queue
