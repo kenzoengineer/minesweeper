@@ -45,6 +45,11 @@ const iHoverContextState = {
   setHovered: () => {},
 };
 
+const sleep = (ms: number) => new Promise<void>((resolve) => setTimeout(resolve, ms));
+
+// delay between solver steps so the run is watchable
+const STEP_DELAY = 60;
+
 export const boardContext = createContext<boardContextType>(iBoardContextState);
 export const statisticsContext = createContext<statisticsContextType>(
   iStatisticsContextState,
@@ -63,6 +68,28 @@ function App() {
   const setHovered = useCallback((cell: CellData | null) => {
     hoveredRef.current = cell;
   }, []);
+
+  const [solving, setSolving] = useState(false);
+
+  // run the solver loop, re-rendering (with a sleep) after each step so the
+  // reveals/flags are visible as they happen
+  const solve = async () => {
+    if (!board || solving) {
+      return;
+    }
+    setSolving(true);
+    const solver = new Solver(board, { ...statistics });
+    while (true) {
+      const result = solver.step();
+      setBoard([...solver.board]);
+      setStatistics({ ...solver.statistics });
+      if (result !== "progress") {
+        break;
+      }
+      await sleep(STEP_DELAY);
+    }
+    setSolving(false);
+  };
 
   // press "z" while hovering a tile to run the solver on it
   useEffect(() => {
@@ -128,6 +155,13 @@ function App() {
         </statisticsContext.Provider>
       </boardContext.Provider>
       <div className="flex flex-col">
+        <button
+          onClick={solve}
+          disabled={solving}
+          className="w-24 my-2 px-3 py-1 bg-neutral-700 text-white rounded disabled:opacity-50"
+        >
+          {solving ? "Solving…" : "Solve"}
+        </button>
         <p>Left clicks: {statistics.leftClicks}</p>
         <p>Right clicks: {statistics.rightClicks}</p>
         <p>Chords: {statistics.chords}</p>

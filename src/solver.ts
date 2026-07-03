@@ -9,9 +9,13 @@ import {
   Statistics,
 } from "./game";
 
+export type StepResult = "won" | "lost" | "progress";
+
 export class Solver {
   // stack grows down [top, 1, 2, bottom]
-  stack = [];
+  stack: CellData[] = [];
+  // tiles already pushed onto the queue, keyed "x,y", so we never reprocess one
+  seen = new Set<string>();
   board: MinesweeperBoard = [];
   statistics: Statistics = {
     leftClicks: 0,
@@ -20,6 +24,7 @@ export class Solver {
   };
   constructor(board: MinesweeperBoard, statistics: Statistics) {
     this.stack = [];
+    this.seen = new Set();
     this.board = board;
     this.statistics = statistics;
   }
@@ -31,6 +36,93 @@ export class Solver {
 
   take() {
     return this.stack.shift();
+  }
+
+  // push a frontier tile, ignoring ones we've already queued
+  private enqueue(cell: CellData) {
+    const key = `${cell.x},${cell.y}`;
+    if (this.seen.has(key)) {
+      return;
+    }
+    this.seen.add(key);
+    this.stack.push(cell);
+  }
+
+  // add every tile flagged "new" by the last action to the queue
+  private enqueueNew() {
+    for (const row of this.board) {
+      for (const cell of row) {
+        if (cell.new) {
+          this.enqueue(cell);
+        }
+      }
+    }
+  }
+
+  // a random unrevealed, unflagged tile (a guess), or null if none remain
+  private randomHidden(): CellData | null {
+    const hidden: CellData[] = [];
+    for (const row of this.board) {
+      for (const cell of row) {
+        if (!cell.revealed && !cell.flagged) {
+          hidden.push(cell);
+        }
+      }
+    }
+    if (hidden.length === 0) {
+      return null;
+    }
+    return hidden[Math.floor(Math.random() * hidden.length)];
+  }
+
+  private mineRevealed() {
+    for (const row of this.board) {
+      for (const cell of row) {
+        if (cell.revealed && cell.value === -1) {
+          return true;
+        }
+      }
+    }
+    return false;
+  }
+
+  private allSafeRevealed() {
+    for (const row of this.board) {
+      for (const cell of row) {
+        if (!cell.revealed && cell.value !== -1) {
+          return false;
+        }
+      }
+    }
+    return true;
+  }
+
+  // one iteration of the loop:
+  //  - queue empty  -> reveal a random tile (a guess)
+  //  - otherwise    -> run move_simple on the next queued tile
+  // either way, tiles newly revealed by the action join the queue
+  step(): StepResult {
+    if (this.mineRevealed()) return "lost";
+    if (this.allSafeRevealed()) return "won";
+
+    clearNew(this.board);
+    if (this.stack.length === 0) {
+      const target = this.randomHidden();
+      if (!target) return "won";
+      revealHelper(target.x, target.y, this.board, this.statistics);
+      // mark the game as started; the first reveal was safe, further mine
+      // hits are now fatal
+      this.statistics.leftClicks++;
+    } else {
+      const queued = this.take()!;
+      // resolve a fresh reference: clearNew replaces cell objects each action
+      this.move_simple(this.board[queued.y][queued.x]);
+    }
+    this.enqueueNew();
+
+    if (this.mineRevealed()) return "lost";
+    if (this.allSafeRevealed()) return "won";
+    return "progress";
   }
 
   // tries to perform a move in this order:
