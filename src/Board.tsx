@@ -1,12 +1,6 @@
 import { useContext } from "react";
-import {
-  ACTIONS_ENUM,
-  CellData,
-  boardContext,
-  flag,
-  revealHelper,
-  statisticsContext,
-} from "./App";
+import { boardContext, hoverContext, statisticsContext } from "./App";
+import { ACTIONS_ENUM, CellData, clearNew, flag, revealHelper } from "./game";
 
 const OVERRIDE = false;
 
@@ -37,8 +31,10 @@ const DISPLAY: Record<string, string> = {
 const Cell = ({ x, y, value }: ICell) => {
   const { board, setBoard } = useContext(boardContext);
   const { statistics, setStatistics } = useContext(statisticsContext);
+  const { setHovered } = useContext(hoverContext);
   const leftclick = () => {
     let temp = [...board!];
+    clearNew(temp);
     const res = revealHelper(x, y, temp, statistics);
     if (res === ACTIONS_ENUM.leftClick) {
       setStatistics({
@@ -79,6 +75,8 @@ const Cell = ({ x, y, value }: ICell) => {
     <div
       onClick={leftclick}
       onContextMenu={rightClick}
+      onMouseEnter={() => setHovered(value)}
+      onMouseLeave={() => setHovered(null)}
       className={`w-10 h-10 text-2xl font-bold flex items-center justify-center ${
         value.revealed
           ? "border-neutral-500 border-[1px]"
