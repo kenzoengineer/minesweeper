@@ -9,7 +9,9 @@ import {
   revealHelper,
 } from "./game";
 
-export type StepResult = "won" | "lost" | "progress" | "stuck";
+// "progress" changed the board (flag/reveal); "noop" advanced the queue but
+// changed nothing — the UI can skip the step delay for a "noop"
+export type StepResult = "won" | "lost" | "progress" | "stuck" | "noop";
 
 export class Solver {
   // LIFO stack; top of the stack is the last element (push/pop)
@@ -58,41 +60,6 @@ export class Solver {
 
     this.inQueue.add(key);
     this.stack.push(cell);
-  }
-
-  // enqueue every revealed number that currently has a forced move available.
-  // Re-scanning after each action means a number is reconsidered whenever a
-  // neighbouring reveal or flag changes its counts — so no forced flag/reveal
-  // is ever left on the board.
-  private enqueueActionable() {
-    for (const row of this.board) {
-      for (const cell of row) {
-        if (cell.revealed && cell.value > 0 && this.hasForcedMove(cell)) {
-          this.enqueue(cell);
-        }
-      }
-    }
-  }
-
-  // true if `cell` has hidden neighbours that move_simple can act on: either
-  // every unrevealed neighbour is a mine (flag them) or all its mines are
-  // already flagged (reveal the rest)
-  private hasForcedMove(cell: CellData) {
-    const { valid, revealed, flagged } = getCounts(cell.x, cell.y, this.board);
-    const unrevealed = valid - revealed; // flagged + hidden-unflagged
-    const hidden = unrevealed - flagged; // hidden and unflagged
-    if (hidden === 0) {
-      return false; // nothing left to flag or reveal
-    }
-    // all remaining unrevealed neighbours are mines -> flag the hidden ones
-    if (cell.value === unrevealed) {
-      return true;
-    }
-    // all mines already flagged -> the hidden ones are safe to reveal
-    if (cell.value === flagged) {
-      return true;
-    }
-    return false;
   }
 
   // a random unrevealed, unflagged tile (a guess), or null if none remain
@@ -144,6 +111,21 @@ export class Solver {
     return true;
   }
 
+  // count of cells that are revealed or flagged. This only ever grows, so
+  // comparing it before/after an action tells us whether the action did
+  // anything (a flag, a reveal, or a chord that cleared tiles).
+  private progressCount() {
+    let n = 0;
+    for (const row of this.board) {
+      for (const cell of row) {
+        if (cell.revealed || cell.flagged) {
+          n++;
+        }
+      }
+    }
+    return n;
+  }
+
   // one iteration of the loop:
   //  - queue empty  -> reveal a random tile (a guess), unless guessing is
   //                    disabled, in which case stop ("stuck"). The mandatory
@@ -156,6 +138,8 @@ export class Solver {
 
     clearNew(this.board);
     clearWorking(this.board);
+
+    const before = this.progressCount();
     if (this.stack.length === 0) {
       // no forced moves left; only reveal if we're allowed to guess (or this
       // is the mandatory opening on an untouched board)
@@ -175,7 +159,8 @@ export class Solver {
 
     if (this.mineRevealed()) return "lost";
     if (this.allSafeRevealed()) return "won";
-    return "progress";
+    // nothing changed on the board -> a no-op the UI can fast-forward past
+    return this.progressCount() > before ? "progress" : "noop";
   }
 
   // tries to perform a move in this order:

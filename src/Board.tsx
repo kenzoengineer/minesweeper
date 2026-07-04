@@ -32,7 +32,7 @@ const Cell = ({ x, y, value }: ICell) => {
   const { board, setBoard } = useContext(boardContext);
   const { setHovered } = useContext(hoverContext);
   const leftclick = () => {
-    let temp = [...board!];
+    const temp = [...board!];
     clearNew(temp);
     revealHelper(x, y, temp);
     setBoard(temp);
@@ -40,7 +40,7 @@ const Cell = ({ x, y, value }: ICell) => {
 
   const rightClick = (e: React.MouseEvent<HTMLDivElement>) => {
     e.preventDefault();
-    let temp = [...board!];
+    const temp = [...board!];
     flag(x, y, temp);
     setBoard(temp);
   };

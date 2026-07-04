@@ -13,6 +13,6 @@
 - Optimization #1:
   - if we flag a tile, surrounding cells should also be added to th queue because their effective mine count changed
 - Optimization #2:
-  - if we reveal a tile, neighbouring cells may now have COND 2 fulfilled, so we need to add it to the queue
-- Optimization #3:
   - use a stack instead of a queue to match human solving patterns
+- Optimization #3:
+  - if we reveal a tile, neighbouring cells may now have COND 2 fulfilled, so we need to add it to the queue

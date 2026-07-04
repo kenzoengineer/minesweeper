@@ -57,13 +57,18 @@ function App() {
     }
     setSolving(true);
     const solver = new Solver(board);
+    // eslint-disable-next-line no-constant-condition
     while (true) {
       const result = solver.step();
       setBoard([...solver.board]);
-      if (result !== "progress") {
+      if (result === "progress") {
+        // only a move that actually changed the board incurs the delay
+        await sleep(STEP_DELAY);
+      } else if (result !== "noop") {
+        // won | lost | stuck
         break;
       }
-      await sleep(STEP_DELAY);
+      // "noop": fall through with no delay
     }
     setSolving(false);
   };
@@ -88,7 +93,7 @@ function App() {
   }, [board]);
 
   useEffect(() => {
-    let res = [];
+    const res = [];
     for (let i = 0; i < HEIGHT; i++) {
       res.push(
         Array(WIDTH)
