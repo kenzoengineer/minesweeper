@@ -19,8 +19,6 @@ export type CellData = {
   value: number;
   revealed: boolean;
   flagged: boolean;
-  new: boolean;
-  working: boolean;
 };
 
 export type CellCounts = {
@@ -54,27 +52,6 @@ export function* neighbors(x: number, y: number, board: MinesweeperBoard) {
     }
   }
 }
-
-const setAll = (board: MinesweeperBoard, overrides: Partial<CellData>) => {
-  for (let y = 0; y < board.length; y++) {
-    for (let x = 0; x < board[y].length; x++) {
-      board[y][x] = {
-        ...board[y][x],
-        ...overrides,
-      };
-    }
-  }
-};
-
-// clear the "new" highlight from every tile; call once at the start of an
-// action (a click or a solver move), not per reveal
-export const clearNew = (board: MinesweeperBoard) => {
-  setAll(board, { new: false });
-};
-
-export const clearWorking = (board: MinesweeperBoard) => {
-  setAll(board, { working: false });
-};
 
 // toggle flag in bound
 const fib = (x: number, y: number, board: MinesweeperBoard) => {
@@ -231,7 +208,6 @@ const reveal = (
   }
 
   if (board[y][x].value > 0) {
-    board[y][x].new = true;
     solver?.push(board[y][x]);
     return;
   }

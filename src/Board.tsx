@@ -1,6 +1,6 @@
 import { useContext } from "react";
 import { boardContext, hoverContext } from "./App";
-import { CellData, clearNew, flag, revealHelper } from "./game";
+import { CellData, flag, revealHelper } from "./game";
 
 const OVERRIDE = false;
 
@@ -33,7 +33,6 @@ const Cell = ({ x, y, value }: ICell) => {
   const { setHovered } = useContext(hoverContext);
   const leftclick = () => {
     const temp = [...board!];
-    clearNew(temp);
     revealHelper(x, y, temp);
     setBoard(temp);
   };
@@ -63,10 +62,7 @@ const Cell = ({ x, y, value }: ICell) => {
         value.revealed
           ? "border-neutral-500 border-[1px]"
           : "border-t-white border-l-white border-r-neutral-500 border-b-neutral-500 border-2"
-      } bg-neutral-400 ${COLORS[value.value]} ${
-        value.new && "shadow-inner shadow-red-900"
-      }
-      ${value.working && "bg-black"}`}
+      } bg-neutral-400 ${COLORS[value.value]}`}
     >
       {displayedValue}
     </div>

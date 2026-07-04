@@ -92,8 +92,6 @@ function App() {
               value: 0,
               revealed: false,
               flagged: false,
-              new: false,
-              working: false,
             };
           }),
       );

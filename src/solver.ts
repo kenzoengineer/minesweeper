@@ -1,7 +1,5 @@
 import {
   CellData,
-  clearNew,
-  clearWorking,
   flag,
   getCounts,
   MinesweeperBoard,
@@ -102,21 +100,15 @@ export class Solver {
     if (this.stack.length === 0 && !this.anyRevealed()) {
       const target = this.randomHidden();
       if (!target) return false;
-      clearNew(this.board);
-      clearWorking(this.board);
       revealHelper(target.x, target.y, this.board, this);
       return true;
     }
 
     // pop numbers off the stack until one actually does something
     while (this.stack.length > 0) {
-      clearNew(this.board);
-      clearWorking(this.board);
       const before = this.progressCount();
       const top = this.pop()!;
-      // resolve a fresh reference: clearNew replaces cell objects each action
-      this.board[top.y][top.x].working = true;
-      this.move_simple(this.board[top.y][top.x]);
+      this.move_simple(top);
       if (this.progressCount() > before) {
         return true;
       }
@@ -130,7 +122,6 @@ export class Solver {
   // 2. clear all tiles if flags == number of mines
   // 3. generalized reduction
   move_simple(cell: CellData) {
-    clearNew(this.board);
     const { valid, revealed, flagged } = getCounts(cell.x, cell.y, this.board);
     // 1. remaining tiles == mine count
     if (cell.value == valid - revealed) {
@@ -143,7 +134,6 @@ export class Solver {
         // flagging c changes the mine math for every revealed number touching it
         for (const { cell: n } of neighbors(c.x, c.y, this.board)) {
           if (n.revealed && n.value > 0) {
-            n.new = true;
             this.push(n);
           }
         }
@@ -279,7 +269,6 @@ export class Solver {
             this.board,
           )) {
             if (n.revealed && n.value > 0) {
-              n.new = true;
               this.push(n);
             }
           }
