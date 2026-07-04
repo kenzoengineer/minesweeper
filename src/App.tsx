@@ -45,10 +45,11 @@ const iHoverContextState = {
   setHovered: () => {},
 };
 
-const sleep = (ms: number) => new Promise<void>((resolve) => setTimeout(resolve, ms));
+const sleep = (ms: number) =>
+  new Promise<void>((resolve) => setTimeout(resolve, ms));
 
 // delay between solver steps so the run is watchable
-const STEP_DELAY = 60;
+const STEP_DELAY = 50;
 
 export const boardContext = createContext<boardContextType>(iBoardContextState);
 export const statisticsContext = createContext<statisticsContextType>(

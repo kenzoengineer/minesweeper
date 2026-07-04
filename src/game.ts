@@ -183,6 +183,8 @@ const reveal = (
     if (statistics.leftClicks === 0) {
       iibAround(x, y, board, -1);
       board[y][x].value = minesAround(x, y, board);
+      // the board is bounded, we will always break
+      // eslint-disable-next-line no-constant-condition
       while (true) {
         const _x = Math.floor(Math.random() * WIDTH);
         const _y = Math.floor(Math.random() * HEIGHT);
