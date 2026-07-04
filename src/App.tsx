@@ -1,5 +1,4 @@
 import { createContext, useCallback, useEffect, useRef, useState } from "react";
-import "./App.css";
 import { Board } from "./Board";
 import { CellData, HEIGHT, MinesweeperBoard, WIDTH } from "./game";
 import { Solver } from "./solver";
@@ -102,12 +101,14 @@ function App() {
     setBoard(res);
   }, []);
   return (
-    <div>
-      <boardContext.Provider value={{ board, setBoard }}>
-        <hoverContext.Provider value={{ setHovered }}>
-          <Board />
-        </hoverContext.Provider>
-      </boardContext.Provider>
+    <>
+      <div>
+        <boardContext.Provider value={{ board, setBoard }}>
+          <hoverContext.Provider value={{ setHovered }}>
+            <Board />
+          </hoverContext.Provider>
+        </boardContext.Provider>
+      </div>
       <div className="flex flex-col">
         <button
           onClick={solve}
@@ -117,7 +118,7 @@ function App() {
           {solving ? "Solving…" : "Solve"}
         </button>
       </div>
-    </div>
+    </>
   );
 }
 

@@ -1,8 +1,8 @@
 import { Solver } from "./solver";
 
-export const WIDTH = 16;
+export const WIDTH = 30;
 export const HEIGHT = 16;
-export const MINES = 40;
+export const MINES = 60;
 
 export enum ACTIONS_ENUM {
   none,
