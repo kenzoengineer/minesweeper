@@ -3,6 +3,19 @@ import { Solver } from "./solver";
 export const WIDTH = 30;
 export const HEIGHT = 16;
 export const MINES = 99;
+export const SEED = 1;
+
+// mulberry32
+let rngState = SEED;
+export const setSeed = (seed: number) => {
+  rngState = seed >>> 0;
+};
+export const random = () => {
+  rngState = (rngState + 0x6d2b79f5) | 0;
+  let t = Math.imul(rngState ^ (rngState >>> 15), 1 | rngState);
+  t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+  return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+};
 
 export enum ACTIONS_ENUM {
   none,
@@ -138,8 +151,8 @@ const placeMines = (safeX: number, safeY: number, board: MinesweeperBoard) => {
   let minesLeft = Math.min(MINES, WIDTH * HEIGHT - safeCells);
 
   while (minesLeft > 0) {
-    const x = Math.floor(Math.random() * WIDTH);
-    const y = Math.floor(Math.random() * HEIGHT);
+    const x = Math.floor(random() * WIDTH);
+    const y = Math.floor(random() * HEIGHT);
     if (board[y][x].value !== -1 && !isSafe(x, y)) {
       board[y][x].value = -1;
       iibAround(x, y, board);

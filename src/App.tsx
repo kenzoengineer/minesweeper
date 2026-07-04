@@ -1,6 +1,6 @@
 import { createContext, useCallback, useEffect, useRef, useState } from "react";
 import { Board } from "./Board";
-import { CellData, HEIGHT, MinesweeperBoard, WIDTH } from "./game";
+import { CellData, HEIGHT, MinesweeperBoard, SEED, setSeed, WIDTH } from "./game";
 import { Solver } from "./solver";
 
 type boardContextType = {
@@ -48,6 +48,8 @@ function App() {
       return;
     }
     setSolving(true);
+    // reset the RNG so a given SEED reproduces the same board + run
+    setSeed(SEED);
     const solver = new Solver(board);
     // step() returns true while it's making progress; each real move renders
     // and incurs the delay (no-ops are consumed inside step() with no delay)

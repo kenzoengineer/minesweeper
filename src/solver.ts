@@ -4,6 +4,7 @@ import {
   getCounts,
   MinesweeperBoard,
   neighbors,
+  random,
   revealHelper,
 } from "./game";
 
@@ -63,7 +64,7 @@ export class Solver {
     if (hidden.length === 0) {
       return null;
     }
-    return hidden[Math.floor(Math.random() * hidden.length)];
+    return hidden[Math.floor(random() * hidden.length)];
   }
 
   private anyRevealed() {
