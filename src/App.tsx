@@ -57,18 +57,11 @@ function App() {
     }
     setSolving(true);
     const solver = new Solver(board);
-    // eslint-disable-next-line no-constant-condition
-    while (true) {
-      const result = solver.step();
+    // step() returns true while it's making progress; each real move renders
+    // and incurs the delay (no-ops are consumed inside step() with no delay)
+    while (solver.step()) {
       setBoard([...solver.board]);
-      if (result === "progress") {
-        // only a move that actually changed the board incurs the delay
-        await sleep(STEP_DELAY);
-      } else if (result !== "noop") {
-        // won | lost | stuck
-        break;
-      }
-      // "noop": fall through with no delay
+      await sleep(STEP_DELAY);
     }
     setSolving(false);
   };

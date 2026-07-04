@@ -9,10 +9,6 @@ import {
   revealHelper,
 } from "./game";
 
-// "progress" changed the board (flag/reveal); "noop" advanced the queue but
-// changed nothing — the UI can skip the step delay for a "noop"
-export type StepResult = "won" | "lost" | "progress" | "stuck" | "noop";
-
 export class Solver {
   // LIFO stack; top of the stack is the last element (push/pop)
   stack: CellData[] = [];
@@ -21,14 +17,10 @@ export class Solver {
   // a neighbouring flag/reveal changes its situation.
   inQueue = new Set<string>();
   board: MinesweeperBoard = [];
-  // when false, the solver only makes forced moves and stops ("stuck") instead
-  // of guessing a random tile
-  allowGuessing = false;
-  constructor(board: MinesweeperBoard, allowGuessing = false) {
+  constructor(board: MinesweeperBoard) {
     this.stack = [];
     this.inQueue = new Set();
     this.board = board;
-    this.allowGuessing = allowGuessing;
   }
 
   peek() {
@@ -89,28 +81,6 @@ export class Solver {
     return false;
   }
 
-  private mineRevealed() {
-    for (const row of this.board) {
-      for (const cell of row) {
-        if (cell.revealed && cell.value === -1) {
-          return true;
-        }
-      }
-    }
-    return false;
-  }
-
-  private allSafeRevealed() {
-    for (const row of this.board) {
-      for (const cell of row) {
-        if (!cell.revealed && cell.value !== -1) {
-          return false;
-        }
-      }
-    }
-    return true;
-  }
-
   // count of cells that are revealed or flagged. This only ever grows, so
   // comparing it before/after an action tells us whether the action did
   // anything (a flag, a reveal, or a chord that cleared tiles).
@@ -126,41 +96,35 @@ export class Solver {
     return n;
   }
 
-  // one iteration of the loop:
-  //  - queue empty  -> reveal a random tile (a guess), unless guessing is
-  //                    disabled, in which case stop ("stuck"). The mandatory
-  //                    opening reveal on an untouched board is always allowed.
-  //  - otherwise    -> run move_simple on the next queued tile
-  // after the action, every number with a forced move is (re)queued
-  step(): StepResult {
-    if (this.mineRevealed()) return "lost";
-    if (this.allSafeRevealed()) return "won";
-
-    clearNew(this.board);
-    clearWorking(this.board);
-
-    const before = this.progressCount();
-    if (this.stack.length === 0) {
-      // no forced moves left; only reveal if we're allowed to guess (or this
-      // is the mandatory opening on an untouched board)
-      if (!this.allowGuessing && this.anyRevealed()) {
-        return "stuck";
-      }
+  // Advance the solver until it changes the board. Returns true if it made a
+  // move (a flag/reveal), false if no more progress is possible (queue drained).
+  // No-op queue entries are consumed silently so every `true` is a real move.
+  step(): boolean {
+    // mandatory opening reveal to bootstrap an untouched board
+    if (this.stack.length === 0 && !this.anyRevealed()) {
       const target = this.randomHidden();
-      if (!target) return "won";
+      if (!target) return false;
+      clearNew(this.board);
+      clearWorking(this.board);
       revealHelper(target.x, target.y, this.board, this);
-    } else {
-      const queued = this.take()!;
-      this.board[queued.y][queued.x].working = true;
-      // resolve a fresh reference: clearNew replaces cell objects each action
-      this.move_simple(this.board[queued.y][queued.x]);
+      return true;
     }
-    //this.enqueueActionable();
 
-    if (this.mineRevealed()) return "lost";
-    if (this.allSafeRevealed()) return "won";
-    // nothing changed on the board -> a no-op the UI can fast-forward past
-    return this.progressCount() > before ? "progress" : "noop";
+    // pop queued numbers until one actually does something
+    while (this.stack.length > 0) {
+      clearNew(this.board);
+      clearWorking(this.board);
+      const before = this.progressCount();
+      const queued = this.take()!;
+      // resolve a fresh reference: clearNew replaces cell objects each action
+      this.board[queued.y][queued.x].working = true;
+      this.move_simple(this.board[queued.y][queued.x]);
+      if (this.progressCount() > before) {
+        return true;
+      }
+    }
+
+    return false;
   }
 
   // tries to perform a move in this order:
