@@ -7,7 +7,6 @@ import {
   iibAround,
   MinesweeperBoard,
   MINES,
-  Statistics,
   WIDTH,
 } from "./game";
 import { Solver } from "./solver";
@@ -20,20 +19,6 @@ type boardContextType = {
 const iBoardContextState = {
   board: null,
   setBoard: () => {},
-};
-
-type statisticsContextType = {
-  statistics: Statistics;
-  setStatistics: React.Dispatch<React.SetStateAction<Statistics>>;
-};
-
-const iStatisticsContextState = {
-  statistics: {
-    leftClicks: 0,
-    rightClicks: 0,
-    chords: 0,
-  },
-  setStatistics: () => {},
 };
 
 type hoverContextType = {
@@ -52,17 +37,9 @@ const sleep = (ms: number) =>
 const STEP_DELAY = 50;
 
 export const boardContext = createContext<boardContextType>(iBoardContextState);
-export const statisticsContext = createContext<statisticsContextType>(
-  iStatisticsContextState,
-);
 export const hoverContext = createContext<hoverContextType>(iHoverContextState);
 function App() {
   const [board, setBoard] = useState<MinesweeperBoard>([]);
-  const [statistics, setStatistics] = useState<Statistics>({
-    leftClicks: 0,
-    rightClicks: 0,
-    chords: 0,
-  });
 
   // the tile the pointer is currently over; a ref so hovering doesn't re-render
   const hoveredRef = useRef<CellData | null>(null);
@@ -79,11 +56,10 @@ function App() {
       return;
     }
     setSolving(true);
-    const solver = new Solver(board, { ...statistics });
+    const solver = new Solver(board);
     while (true) {
       const result = solver.step();
       setBoard([...solver.board]);
-      setStatistics({ ...solver.statistics });
       if (result !== "progress") {
         break;
       }
@@ -103,13 +79,13 @@ function App() {
         return;
       }
       const next = [...board];
-      const solver = new Solver(next, statistics);
+      const solver = new Solver(next);
       solver.move_simple(cell);
       setBoard(next);
     };
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
-  }, [board, statistics]);
+  }, [board]);
 
   useEffect(() => {
     let res = [];
@@ -149,11 +125,9 @@ function App() {
   return (
     <div>
       <boardContext.Provider value={{ board, setBoard }}>
-        <statisticsContext.Provider value={{ statistics, setStatistics }}>
-          <hoverContext.Provider value={{ setHovered }}>
-            <Board />
-          </hoverContext.Provider>
-        </statisticsContext.Provider>
+        <hoverContext.Provider value={{ setHovered }}>
+          <Board />
+        </hoverContext.Provider>
       </boardContext.Provider>
       <div className="flex flex-col">
         <button
@@ -163,9 +137,6 @@ function App() {
         >
           {solving ? "Solving…" : "Solve"}
         </button>
-        <p>Left clicks: {statistics.leftClicks}</p>
-        <p>Right clicks: {statistics.rightClicks}</p>
-        <p>Chords: {statistics.chords}</p>
       </div>
     </div>
   );

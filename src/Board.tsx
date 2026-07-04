@@ -1,6 +1,6 @@
 import { useContext } from "react";
-import { boardContext, hoverContext, statisticsContext } from "./App";
-import { ACTIONS_ENUM, CellData, clearNew, flag, revealHelper } from "./game";
+import { boardContext, hoverContext } from "./App";
+import { CellData, clearNew, flag, revealHelper } from "./game";
 
 const OVERRIDE = false;
 
@@ -30,36 +30,18 @@ const DISPLAY: Record<string, string> = {
 
 const Cell = ({ x, y, value }: ICell) => {
   const { board, setBoard } = useContext(boardContext);
-  const { statistics, setStatistics } = useContext(statisticsContext);
   const { setHovered } = useContext(hoverContext);
   const leftclick = () => {
     let temp = [...board!];
     clearNew(temp);
-    const res = revealHelper(x, y, temp, statistics);
-    if (res === ACTIONS_ENUM.leftClick) {
-      setStatistics({
-        ...statistics,
-        leftClicks: statistics.leftClicks + 1,
-      });
-    } else if (res === ACTIONS_ENUM.chord) {
-      setStatistics({
-        ...statistics,
-        chords: statistics.chords + 1,
-      });
-    }
+    revealHelper(x, y, temp);
     setBoard(temp);
   };
 
   const rightClick = (e: React.MouseEvent<HTMLDivElement>) => {
     e.preventDefault();
     let temp = [...board!];
-    const res = flag(x, y, temp);
-    if (res === ACTIONS_ENUM.rightClick) {
-      setStatistics({
-        ...statistics,
-        rightClicks: statistics.rightClicks + 1,
-      });
-    }
+    flag(x, y, temp);
     setBoard(temp);
   };
 

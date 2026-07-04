@@ -25,12 +25,6 @@ export type CellCounts = {
   flagged: number;
 };
 
-export type Statistics = {
-  leftClicks: number;
-  rightClicks: number;
-  chords: number;
-};
-
 export type MinesweeperBoard = CellData[][];
 
 export const inBound = (x: number, y: number, board: MinesweeperBoard) => {
@@ -143,15 +137,23 @@ export const getCounts = (x: number, y: number, board: MinesweeperBoard) => {
   return counts;
 };
 
-export const revealHelper = (
-  x: number,
-  y: number,
-  board: MinesweeperBoard,
-  statistics: Statistics,
-) => {
+// true if any cell on the board has been revealed; used to detect the very
+// first reveal of the game (which is kept safe)
+const hasRevealed = (board: MinesweeperBoard) => {
+  for (const row of board) {
+    for (const cell of row) {
+      if (cell.revealed) {
+        return true;
+      }
+    }
+  }
+  return false;
+};
+
+export const revealHelper = (x: number, y: number, board: MinesweeperBoard) => {
   // handle normal case
   if (!board[y][x].revealed) {
-    reveal(x, y, board, statistics);
+    reveal(x, y, board);
     return ACTIONS_ENUM.leftClick;
   }
 
@@ -160,17 +162,12 @@ export const revealHelper = (
     return;
   }
   for (const { x: nx, y: ny } of neighbors(x, y, board)) {
-    reveal(nx, ny, board, statistics);
+    reveal(nx, ny, board);
   }
   return ACTIONS_ENUM.chord;
 };
 
-const reveal = (
-  x: number,
-  y: number,
-  board: MinesweeperBoard,
-  statistics: Statistics,
-) => {
+const reveal = (x: number, y: number, board: MinesweeperBoard) => {
   if (!inBound(x, y, board)) {
     return;
   }
@@ -180,7 +177,9 @@ const reveal = (
   }
 
   if (board[y][x].value === -1) {
-    if (statistics.leftClicks === 0) {
+    // START THE GAME! the first reveal of the game (nothing revealed yet) is
+    // kept safe by relocating this mine
+    if (!hasRevealed(board)) {
       iibAround(x, y, board, -1);
       board[y][x].value = minesAround(x, y, board);
       // the board is bounded, we will always break
@@ -194,6 +193,7 @@ const reveal = (
           break;
         }
       }
+      // END THE GAME!
     } else {
       for (let a = 0; a < HEIGHT; a++) {
         for (let b = 0; b < WIDTH; b++) {
@@ -211,11 +211,12 @@ const reveal = (
     return;
   }
 
+  // if it was a 0, cascade
   for (const { x: nx, y: ny, cell } of neighbors(x, y, board)) {
     if (cell.revealed) {
       continue;
     }
-    reveal(nx, ny, board, statistics);
+    reveal(nx, ny, board);
   }
 };
 

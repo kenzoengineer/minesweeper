@@ -6,7 +6,6 @@ import {
   MinesweeperBoard,
   neighbors,
   revealHelper,
-  Statistics,
 } from "./game";
 
 export type StepResult = "won" | "lost" | "progress" | "stuck";
@@ -22,20 +21,10 @@ export class Solver {
   // when false, the solver only makes forced moves and stops ("stuck") instead
   // of guessing a random tile
   allowGuessing = false;
-  statistics: Statistics = {
-    leftClicks: 0,
-    rightClicks: 0,
-    chords: 0,
-  };
-  constructor(
-    board: MinesweeperBoard,
-    statistics: Statistics,
-    allowGuessing = false,
-  ) {
+  constructor(board: MinesweeperBoard, allowGuessing = false) {
     this.stack = [];
     this.inQueue = new Set();
     this.board = board;
-    this.statistics = statistics;
     this.allowGuessing = allowGuessing;
   }
 
@@ -165,10 +154,7 @@ export class Solver {
       }
       const target = this.randomHidden();
       if (!target) return "won";
-      revealHelper(target.x, target.y, this.board, this.statistics);
-      // mark the game as started; the first reveal was safe, further mine
-      // hits are now fatal
-      this.statistics.leftClicks++;
+      revealHelper(target.x, target.y, this.board);
     } else {
       const queued = this.take()!;
       // resolve a fresh reference: clearNew replaces cell objects each action
@@ -210,7 +196,7 @@ export class Solver {
     if (cell.value == flagged) {
       for (const { cell: c } of neighbors(cell.x, cell.y, this.board)) {
         if (!c.flagged) {
-          revealHelper(c.x, c.y, this.board, this.statistics);
+          revealHelper(c.x, c.y, this.board);
         }
       }
     }
