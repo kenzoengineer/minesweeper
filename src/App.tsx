@@ -101,6 +101,7 @@ function App() {
               revealed: false,
               flagged: false,
               new: false,
+              working: false,
             };
           }),
       );

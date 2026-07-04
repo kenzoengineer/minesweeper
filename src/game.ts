@@ -9,7 +9,8 @@ export enum ACTIONS_ENUM {
   chord,
 }
 
-// x is up and down, y is left to right
+// x is the column (0..WIDTH-1), y is the row (0..HEIGHT-1);
+// the board is indexed board[y][x]
 export type CellData = {
   x: number;
   y: number;
@@ -53,8 +54,8 @@ export function* neighbors(x: number, y: number, board: MinesweeperBoard) {
 }
 
 const setAll = (board: MinesweeperBoard, overrides: Partial<CellData>) => {
-  for (let x = 0; x < board.length; x++) {
-    for (let y = 0; y < board[x].length; y++) {
+  for (let y = 0; y < board.length; y++) {
+    for (let x = 0; x < board[y].length; x++) {
       board[y][x] = {
         ...board[y][x],
         ...overrides,

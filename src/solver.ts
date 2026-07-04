@@ -173,7 +173,8 @@ export class Solver {
   // tries to perform a move in this order:
   // 1. flag all tiles if unrevealed == number of mines
   // 2. clear all tiles if flags == number of mines
-  // 3. do nothing (TODO)
+  // 3. do nothing
+  // TODO add pattern recognition
   move_simple(cell: CellData) {
     clearNew(this.board);
     const { valid, revealed, flagged } = getCounts(cell.x, cell.y, this.board);
