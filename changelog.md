@@ -16,3 +16,5 @@
   - use a stack instead of a queue to match human solving patterns
 - Optimization #3:
   - if we reveal a tile, neighbouring cells may now have COND 2 fulfilled, so we need to add it to the queue
+- Optimization #4:
+  - subset/reduction, this solves 1-1-safe and 1-2-flag patterns

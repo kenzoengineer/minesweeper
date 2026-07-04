@@ -12,14 +12,12 @@ import {
 export class Solver {
   // LIFO stack; top of the stack is the last element (push/pop)
   stack: CellData[] = [];
-  // tiles currently waiting in the queue, keyed "x,y", to avoid duplicate
-  // entries. Unlike a permanent "seen" set, a tile can be re-queued later once
-  // a neighbouring flag/reveal changes its situation.
-  inQueue = new Set<string>();
+  // cells currently in the stack, keyed "x,y"
+  inStack = new Set<string>();
   board: MinesweeperBoard = [];
   constructor(board: MinesweeperBoard) {
     this.stack = [];
-    this.inQueue = new Set();
+    this.inStack = new Set();
     this.board = board;
   }
 
@@ -28,20 +26,20 @@ export class Solver {
     return this.stack[this.stack.length - 1];
   }
 
-  take() {
+  pop() {
     const cell = this.stack.pop();
     if (cell) {
-      this.inQueue.delete(`${cell.x},${cell.y}`);
+      this.inStack.delete(`${cell.x},${cell.y}`);
     }
     return cell;
   }
 
-  // push a frontier tile. If it's already queued, promote it to the top
-  enqueue(cell: CellData) {
+  // push a frontier tile. If it's already on the stack, promote it to the top
+  push(cell: CellData) {
     const key = `${cell.x},${cell.y}`;
 
     // promotion
-    if (this.inQueue.has(key)) {
+    if (this.inStack.has(key)) {
       const idx = this.stack.findIndex((c) => `${c.x},${c.y}` === key);
       if (idx !== -1) {
         this.stack.splice(idx, 1);
@@ -50,7 +48,7 @@ export class Solver {
       return;
     }
 
-    this.inQueue.add(key);
+    this.inStack.add(key);
     this.stack.push(cell);
   }
 
@@ -97,8 +95,8 @@ export class Solver {
   }
 
   // Advance the solver until it changes the board. Returns true if it made a
-  // move (a flag/reveal), false if no more progress is possible (queue drained).
-  // No-op queue entries are consumed silently so every `true` is a real move.
+  // move (a flag/reveal), false if no more progress is possible (stack drained).
+  // No-op stack entries are consumed silently so every `true` is a real move.
   step(): boolean {
     // mandatory opening reveal to bootstrap an untouched board
     if (this.stack.length === 0 && !this.anyRevealed()) {
@@ -110,15 +108,15 @@ export class Solver {
       return true;
     }
 
-    // pop queued numbers until one actually does something
+    // pop numbers off the stack until one actually does something
     while (this.stack.length > 0) {
       clearNew(this.board);
       clearWorking(this.board);
       const before = this.progressCount();
-      const queued = this.take()!;
+      const top = this.pop()!;
       // resolve a fresh reference: clearNew replaces cell objects each action
-      this.board[queued.y][queued.x].working = true;
-      this.move_simple(this.board[queued.y][queued.x]);
+      this.board[top.y][top.x].working = true;
+      this.move_simple(this.board[top.y][top.x]);
       if (this.progressCount() > before) {
         return true;
       }
@@ -146,7 +144,7 @@ export class Solver {
         for (const { cell: n } of neighbors(c.x, c.y, this.board)) {
           if (n.revealed && n.value > 0) {
             n.new = true;
-            this.enqueue(n);
+            this.push(n);
           }
         }
       }
@@ -177,51 +175,6 @@ export class Solver {
     return set;
   }
 
-  private performReduction(
-    setA: Set<CellData>,
-    AEffectiveMineCount: number,
-    setB: Set<CellData>,
-    BEffectiveMineCount: number,
-  ): boolean {
-    // if A is a strict subset of B, then we want to continue
-    if (setA.isSubsetOf(setB)) {
-      // B / A
-      const setDiff = setB.difference(setA);
-
-      // if B has no remaining hidden cells then no point doing anything
-      // e.g. - x x -
-      //      - A B -
-      if (setDiff.size == 0) return false;
-
-      // 1 1 safe pattern, clear all mines
-      if (BEffectiveMineCount - AEffectiveMineCount == 0) {
-        for (const toClear of setDiff) {
-          revealHelper(toClear.x, toClear.y, this.board, this);
-        }
-        return true;
-      }
-      // 1 2 flag pattern, flag all mines
-      if (BEffectiveMineCount - AEffectiveMineCount == setDiff.size) {
-        for (const toClear of setDiff) {
-          flag(toClear.x, toClear.y, this.board);
-          // flagging toClear changes the mine math for every revealed number touching it
-          for (const { cell: n } of neighbors(
-            toClear.x,
-            toClear.y,
-            this.board,
-          )) {
-            if (n.revealed && n.value > 0) {
-              n.new = true;
-              this.enqueue(n);
-            }
-          }
-        }
-        return true;
-      }
-    }
-    return false;
-  }
-
   // generalized reduction:
   // adjacent cells A and B will share some neighbouring cells
   // denoted below as x
@@ -243,7 +196,7 @@ export class Solver {
   // step 3: if alpha is a subset of B's neighbours, reduce.
   // step 4: if the reduction results in a simple case, flag or reveal
   move_pair(cell: CellData) {
-    // count all unrevealed, unflagged tiles
+    // 1. count all unrevealed, unflagged tiles
     const setA = this.getHiddenUnflaggedCellNeighbours(cell);
     // all neighbours are flagged and/or revealed
     if (setA.size == 0) return;
@@ -254,7 +207,7 @@ export class Solver {
     );
     const AEffectiveMineCount = cell.value - AFlaggedMineCount;
 
-    // check all neighbours for a revealed number cell
+    // 2. check all neighbours for a revealed number cell
     for (const { cell: BNeighbour } of neighbors(cell.x, cell.y, this.board)) {
       // skip hidden and empty cells
       if (!BNeighbour.revealed || BNeighbour.value == 0) {
@@ -270,6 +223,7 @@ export class Solver {
         this.board,
       );
       const BEffectiveMineCount = BNeighbour.value - BFlaggedCount;
+      // do this both ways, and only do it once
       if (
         this.performReduction(
           setA,
@@ -289,5 +243,50 @@ export class Solver {
       )
         return;
     }
+  }
+
+  private performReduction(
+    setA: Set<CellData>,
+    AEffectiveMineCount: number,
+    setB: Set<CellData>,
+    BEffectiveMineCount: number,
+  ): boolean {
+    // 3. if A is a strict subset of B, then we want to continue
+    if (setA.isSubsetOf(setB)) {
+      // B / A
+      const setDiff = setB.difference(setA);
+
+      // if B has no remaining hidden cells then no point doing anything
+      // e.g. - x x -
+      //      - A B -
+      if (setDiff.size == 0) return false;
+
+      // 4a. 1 1 safe pattern, clear all mines
+      if (BEffectiveMineCount - AEffectiveMineCount == 0) {
+        for (const toClear of setDiff) {
+          revealHelper(toClear.x, toClear.y, this.board, this);
+        }
+        return true;
+      }
+      // 4b. 1 2 flag pattern, flag all mines
+      if (BEffectiveMineCount - AEffectiveMineCount == setDiff.size) {
+        for (const toClear of setDiff) {
+          flag(toClear.x, toClear.y, this.board);
+          // flagging toClear changes the mine math for every revealed number touching it
+          for (const { cell: n } of neighbors(
+            toClear.x,
+            toClear.y,
+            this.board,
+          )) {
+            if (n.revealed && n.value > 0) {
+              n.new = true;
+              this.push(n);
+            }
+          }
+        }
+        return true;
+      }
+    }
+    return false;
   }
 }
