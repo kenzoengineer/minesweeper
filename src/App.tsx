@@ -119,7 +119,6 @@ function App() {
         minesLeft--;
       }
     }
-    console.log(res);
     setBoard(res);
   }, [WIDTH, HEIGHT, MINES]);
   return (

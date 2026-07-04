@@ -17,6 +17,7 @@ export type CellData = {
   revealed: boolean;
   flagged: boolean;
   new: boolean;
+  working: boolean;
 };
 
 export type CellCounts = {
@@ -66,6 +67,10 @@ const setAll = (board: MinesweeperBoard, overrides: Partial<CellData>) => {
 // action (a click or a solver move), not per reveal
 export const clearNew = (board: MinesweeperBoard) => {
   setAll(board, { new: false });
+};
+
+export const clearWorking = (board: MinesweeperBoard) => {
+  setAll(board, { working: false });
 };
 
 // count number of mines
@@ -137,8 +142,8 @@ export const getCounts = (x: number, y: number, board: MinesweeperBoard) => {
   return counts;
 };
 
-// true if any cell on the board has been revealed; used to detect the very
-// first reveal of the game (which is kept safe)
+// true if any cell is revealed
+// slow but who cares
 const hasRevealed = (board: MinesweeperBoard) => {
   for (const row of board) {
     for (const cell of row) {

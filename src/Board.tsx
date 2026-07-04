@@ -48,10 +48,10 @@ const Cell = ({ x, y, value }: ICell) => {
   const displayedValue = value.flagged
     ? DISPLAY["-2"]
     : !(value.revealed || OVERRIDE)
-    ? ""
-    : value.value === -1
-    ? DISPLAY["-1"]
-    : value.value;
+      ? ""
+      : value.value === -1
+        ? DISPLAY["-1"]
+        : value.value;
 
   return (
     <div
@@ -65,7 +65,8 @@ const Cell = ({ x, y, value }: ICell) => {
           : "border-t-white border-l-white border-r-neutral-500 border-b-neutral-500 border-2"
       } bg-neutral-400 ${COLORS[value.value]} ${
         value.new && "shadow-inner shadow-red-900"
-      }`}
+      }
+      ${value.working && "bg-black"}`}
     >
       {displayedValue}
     </div>
@@ -78,9 +79,11 @@ export const Board = () => {
     <div className="flex flex-col">
       {board!.map((row, i) => {
         return (
-          <div className="flex">
+          <div className="flex" key={`board-${i}`}>
             {row.map((cell, j) => {
-              return <Cell value={cell} x={j} y={i}></Cell>;
+              return (
+                <Cell value={cell} x={j} y={i} key={`cell-${i}-${j}`}></Cell>
+              );
             })}
           </div>
         );

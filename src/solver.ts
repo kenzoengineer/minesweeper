@@ -1,6 +1,7 @@
 import {
   CellData,
   clearNew,
+  clearWorking,
   flag,
   getCounts,
   MinesweeperBoard,
@@ -146,6 +147,7 @@ export class Solver {
     if (this.allSafeRevealed()) return "won";
 
     clearNew(this.board);
+    clearWorking(this.board);
     if (this.stack.length === 0) {
       // no forced moves left; only reveal if we're allowed to guess (or this
       // is the mandatory opening on an untouched board)
@@ -157,6 +159,7 @@ export class Solver {
       revealHelper(target.x, target.y, this.board);
     } else {
       const queued = this.take()!;
+      this.board[queued.y][queued.x].working = true;
       // resolve a fresh reference: clearNew replaces cell objects each action
       this.move_simple(this.board[queued.y][queued.x]);
     }
