@@ -42,12 +42,20 @@ export class Solver {
     return cell;
   }
 
-  // push a frontier tile, skipping ones already waiting in the queue
-  private enqueue(cell: CellData) {
+  // push a frontier tile. If it's already queued, promote it to the top
+  enqueue(cell: CellData) {
     const key = `${cell.x},${cell.y}`;
+
+    // promotion
     if (this.inQueue.has(key)) {
+      const idx = this.stack.findIndex((c) => `${c.x},${c.y}` === key);
+      if (idx !== -1) {
+        this.stack.splice(idx, 1);
+        this.stack.push(cell);
+      }
       return;
     }
+
     this.inQueue.add(key);
     this.stack.push(cell);
   }
@@ -156,14 +164,14 @@ export class Solver {
       }
       const target = this.randomHidden();
       if (!target) return "won";
-      revealHelper(target.x, target.y, this.board);
+      revealHelper(target.x, target.y, this.board, this);
     } else {
       const queued = this.take()!;
       this.board[queued.y][queued.x].working = true;
       // resolve a fresh reference: clearNew replaces cell objects each action
       this.move_simple(this.board[queued.y][queued.x]);
     }
-    this.enqueueActionable();
+    //this.enqueueActionable();
 
     if (this.mineRevealed()) return "lost";
     if (this.allSafeRevealed()) return "won";
@@ -186,11 +194,11 @@ export class Solver {
           continue;
         }
         flag(c.x, c.y, this.board);
-        // flagging c changes the mine math for every revealed number touching
-        // it, so mark those "new" to give them another move_simple pass
+        // flagging c changes the mine math for every revealed number touching it
         for (const { cell: n } of neighbors(c.x, c.y, this.board)) {
           if (n.revealed && n.value > 0) {
             n.new = true;
+            this.enqueue(n);
           }
         }
       }
@@ -200,7 +208,7 @@ export class Solver {
     if (cell.value == flagged) {
       for (const { cell: c } of neighbors(cell.x, cell.y, this.board)) {
         if (!c.flagged) {
-          revealHelper(c.x, c.y, this.board);
+          revealHelper(c.x, c.y, this.board, this);
         }
       }
     }

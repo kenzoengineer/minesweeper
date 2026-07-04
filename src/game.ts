@@ -1,3 +1,5 @@
+import { Solver } from "./solver";
+
 export const WIDTH = 25;
 export const HEIGHT = 25;
 export const MINES = 99;
@@ -156,10 +158,15 @@ const hasRevealed = (board: MinesweeperBoard) => {
   return false;
 };
 
-export const revealHelper = (x: number, y: number, board: MinesweeperBoard) => {
+export const revealHelper = (
+  x: number,
+  y: number,
+  board: MinesweeperBoard,
+  solver?: Solver,
+) => {
   // handle normal case
   if (!board[y][x].revealed) {
-    reveal(x, y, board);
+    reveal(x, y, board, solver);
     return ACTIONS_ENUM.leftClick;
   }
 
@@ -168,12 +175,17 @@ export const revealHelper = (x: number, y: number, board: MinesweeperBoard) => {
     return;
   }
   for (const { x: nx, y: ny } of neighbors(x, y, board)) {
-    reveal(nx, ny, board);
+    reveal(nx, ny, board, solver);
   }
   return ACTIONS_ENUM.chord;
 };
 
-const reveal = (x: number, y: number, board: MinesweeperBoard) => {
+const reveal = (
+  x: number,
+  y: number,
+  board: MinesweeperBoard,
+  solver?: Solver,
+) => {
   if (!inBound(x, y, board)) {
     return;
   }
@@ -214,6 +226,7 @@ const reveal = (x: number, y: number, board: MinesweeperBoard) => {
 
   if (board[y][x].value > 0) {
     board[y][x].new = true;
+    solver?.enqueue(board[y][x]);
     return;
   }
 
@@ -222,7 +235,7 @@ const reveal = (x: number, y: number, board: MinesweeperBoard) => {
     if (cell.revealed) {
       continue;
     }
-    reveal(nx, ny, board);
+    reveal(nx, ny, board, solver);
   }
 };
 
