@@ -1,11 +1,11 @@
-import { createContext, useCallback, useEffect, useRef, useState } from "react";
+import { createContext, useCallback, useRef, useState } from "react";
 import { Board } from "./Board";
 import {
   CellData,
   HEIGHT,
   MinesweeperBoard,
   SEED,
-  setSeed,
+  setSeed as seedRandom,
   WIDTH,
 } from "./game";
 import { Solver } from "./solver";
@@ -29,16 +29,82 @@ const iHoverContextState = {
   setHovered: () => {},
 };
 
-const sleep = (ms: number) =>
-  new Promise<void>((resolve) => setTimeout(resolve, ms));
-
-// delay between solver steps so the run is watchable
-const STEP_DELAY = 50;
-
 export const boardContext = createContext<boardContextType>(iBoardContextState);
 export const hoverContext = createContext<hoverContextType>(iHoverContextState);
+
+// how many seeds to scan before giving up looking for an anomaly
+const SCAN_LIMIT = 1000;
+
+// a fresh, mine-free board (mines are placed on the first reveal)
+const emptyBoard = (): MinesweeperBoard => {
+  const res: MinesweeperBoard = [];
+  for (let i = 0; i < HEIGHT; i++) {
+    res.push(
+      Array(WIDTH)
+        .fill(null)
+        .map((_, j) => ({
+          x: j,
+          y: i,
+          value: 0,
+          revealed: false,
+          flagged: false,
+        })),
+    );
+  }
+  return res;
+};
+
+// solve a fresh board for the given seed with the given reduction radius
+const solved = (seed: number, far: boolean): MinesweeperBoard => {
+  const board = emptyBoard();
+  seedRandom(seed);
+  const solver = new Solver(board, far);
+  while (solver.step()) {
+    // run to completion
+  }
+  return board;
+};
+
+// true if the two boards ended up in a different state
+const differ = (a: MinesweeperBoard, b: MinesweeperBoard) => {
+  for (let y = 0; y < a.length; y++) {
+    for (let x = 0; x < a[y].length; x++) {
+      if (
+        a[y][x].revealed !== b[y][x].revealed ||
+        a[y][x].flagged !== b[y][x].flagged
+      ) {
+        return true;
+      }
+    }
+  }
+  return false;
+};
+
+// one-line summary of how far a solved board got
+const summarize = (b: MinesweeperBoard) => {
+  let safe = 0;
+  let revealedSafe = 0;
+  let flagged = 0;
+  for (const row of b) {
+    for (const cell of row) {
+      if (cell.value !== -1) safe++;
+      if (cell.revealed && cell.value !== -1) revealedSafe++;
+      if (cell.flagged) flagged++;
+    }
+  }
+  const done = safe > 0 && revealedSafe === safe;
+  return `${done ? "SOLVED" : "stuck"} · ${revealedSafe}/${safe} safe revealed · ${flagged} flagged`;
+};
+
 function App() {
-  const [board, setBoard] = useState<MinesweeperBoard>([]);
+  const [seed, setSeed] = useState(SEED);
+  const [boardNear, setBoardNear] = useState<MinesweeperBoard>(() =>
+    solved(SEED, false),
+  );
+  const [boardFar, setBoardFar] = useState<MinesweeperBoard>(() =>
+    solved(SEED, true),
+  );
+  const [message, setMessage] = useState("");
 
   // the tile the pointer is currently over; a ref so hovering doesn't re-render
   const hoveredRef = useRef<CellData | null>(null);
@@ -46,84 +112,59 @@ function App() {
     hoveredRef.current = cell;
   }, []);
 
-  const [solving, setSolving] = useState(false);
-
-  // run the solver loop, re-rendering (with a sleep) after each step so the
-  // reveals/flags are visible as they happen
-  const solve = async () => {
-    if (!board || solving) {
-      return;
+  // scan forward from the current seed until the two solvers disagree
+  const findAnomaly = () => {
+    for (let s = seed + 1; s <= seed + SCAN_LIMIT; s++) {
+      const near = solved(s, false);
+      const far = solved(s, true);
+      if (differ(near, far)) {
+        setSeed(s);
+        setBoardNear(near);
+        setBoardFar(far);
+        setMessage(`anomaly at seed ${s}`);
+        return;
+      }
     }
-    setSolving(true);
-    // reset the RNG so a given SEED reproduces the same board + run
-    setSeed(SEED);
-    const solver = new Solver(board);
-    // step() returns true while it's making progress; each real move renders
-    // and incurs the delay (no-ops are consumed inside step() with no delay)
-    while (solver.step()) {
-      setBoard([...solver.board]);
-      //await sleep(STEP_DELAY);
-    }
-    setSolving(false);
+    // none found; jump ahead so another click keeps scanning
+    setSeed(seed + SCAN_LIMIT);
+    setMessage(`no anomaly in seeds ${seed + 1}..${seed + SCAN_LIMIT}`);
   };
 
-  // press "z" while hovering a tile to run the solver on it
-  useEffect(() => {
-    const onKeyDown = (e: KeyboardEvent) => {
-      if (e.key !== "z") {
-        return;
-      }
-      const cell = hoveredRef.current;
-      if (!cell || !board) {
-        return;
-      }
-      const next = [...board];
-      const solver = new Solver(next);
-      solver.move_simple(cell);
-      setBoard(next);
-    };
-    window.addEventListener("keydown", onKeyDown);
-    return () => window.removeEventListener("keydown", onKeyDown);
-  }, [board]);
-
-  useEffect(() => {
-    // start with an empty board; mines are placed on the first reveal so the
-    // opening click is always safe (see placeMines in game.ts)
-    const res = [];
-    for (let i = 0; i < HEIGHT; i++) {
-      res.push(
-        Array(WIDTH)
-          .fill(null)
-          .map((_, j) => {
-            return {
-              x: j,
-              y: i,
-              value: 0,
-              revealed: false,
-              flagged: false,
-            };
-          }),
-      );
-    }
-    setBoard(res);
-  }, []);
   return (
     <>
-      <div>
-        <boardContext.Provider value={{ board, setBoard }}>
-          <hoverContext.Provider value={{ setHovered }}>
-            <Board />
-          </hoverContext.Provider>
-        </boardContext.Provider>
+      <div className="flex gap-8 p-4 overflow-x-auto">
+        <div>
+          <h2 className="font-bold mb-2">neighbors (distance 1)</h2>
+          <boardContext.Provider
+            value={{ board: boardNear, setBoard: setBoardNear }}
+          >
+            <hoverContext.Provider value={{ setHovered }}>
+              <Board />
+            </hoverContext.Provider>
+          </boardContext.Provider>
+          <p className="mt-2">{summarize(boardNear)}</p>
+        </div>
+        <div>
+          <h2 className="font-bold mb-2">farNeighbors (distance 2)</h2>
+          <boardContext.Provider
+            value={{ board: boardFar, setBoard: setBoardFar }}
+          >
+            <hoverContext.Provider value={{ setHovered }}>
+              <Board />
+            </hoverContext.Provider>
+          </boardContext.Provider>
+          <p className="mt-2">{summarize(boardFar)}</p>
+        </div>
       </div>
-      <div className="flex flex-col">
+      <div className="flex items-center gap-4 m-4">
         <button
-          onClick={solve}
-          disabled={solving}
-          className="w-24 my-2 px-3 py-1 bg-neutral-700 text-white rounded disabled:opacity-50"
+          onClick={findAnomaly}
+          className="px-3 py-1 bg-neutral-700 text-white rounded"
         >
-          {solving ? "Solving…" : "Solve"}
+          Find next anomaly
         </button>
+        <span>seed {seed}</span>
+        <span>{message}</span>
       </div>
     </>
   );

@@ -3,7 +3,7 @@ import { Solver } from "./solver";
 export const WIDTH = 30;
 export const HEIGHT = 16;
 export const MINES = 99;
-export const SEED = 15;
+export const SEED = 1;
 
 // mulberry32
 let rngState = SEED;

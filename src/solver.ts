@@ -15,10 +15,14 @@ export class Solver {
   // cells currently in the stack, keyed "x,y"
   inStack = new Set<string>();
   board: MinesweeperBoard = [];
-  constructor(board: MinesweeperBoard) {
+  // pair-reduction partner search radius: true = Chebyshev distance 2
+  // (farNeighbors), false = distance 1 (neighbors)
+  far = true;
+  constructor(board: MinesweeperBoard, far = true) {
     this.stack = [];
     this.inStack = new Set();
     this.board = board;
+    this.far = far;
   }
 
   peek() {
@@ -199,13 +203,10 @@ export class Solver {
     );
     const AEffectiveMineCount = cell.value - AFlaggedMineCount;
 
-    // 2. any revealed number within distance 2 can share hidden cells with A,
-    // so it's a candidate partner for a subset reduction
-    for (const { cell: BNeighbour } of farNeighbors(
-      cell.x,
-      cell.y,
-      this.board,
-    )) {
+    // 2. candidate partners that can share hidden cells with A. `far` widens
+    // the search from distance 1 (neighbors) to distance 2 (farNeighbors).
+    const partners = this.far ? farNeighbors : neighbors;
+    for (const { cell: BNeighbour } of partners(cell.x, cell.y, this.board)) {
       if (this.tryReducePair(setA, AEffectiveMineCount, BNeighbour)) {
         return;
       }
