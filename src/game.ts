@@ -224,15 +224,16 @@ const reveal = (
 
   rib(x, y, board);
 
+  // also enqueue surrounding guys
+  for (const { cell } of neighbors(x, y, board)) {
+    if (cell.revealed && cell.value > 0) {
+      solver?.enqueue(cell);
+    }
+  }
+
   if (board[y][x].value > 0) {
     board[y][x].new = true;
     solver?.enqueue(board[y][x]);
-    // also enqueue surrounding guys
-    for (const { cell } of neighbors(x, y, board)) {
-      if (cell.revealed && cell.value > 0) {
-        solver?.enqueue(cell);
-      }
-    }
     return;
   }
 
