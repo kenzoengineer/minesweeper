@@ -1,14 +1,6 @@
-import { useContext } from "react";
-import { boardContext, hoverContext } from "./App";
-import { CellData, flag, revealHelper } from "./game";
+import { CellData, MinesweeperBoard } from "./game";
 
 const OVERRIDE = false;
-
-interface ICell {
-  x: number;
-  y: number;
-  value: CellData;
-}
 
 const COLORS: Record<string, string> = {
   "0": "text-neutral-400",
@@ -28,22 +20,7 @@ const DISPLAY: Record<string, string> = {
   "-2": "🚩",
 };
 
-const Cell = ({ x, y, value }: ICell) => {
-  const { board, setBoard } = useContext(boardContext);
-  const { setHovered } = useContext(hoverContext);
-  const leftclick = () => {
-    const temp = [...board!];
-    revealHelper(x, y, temp);
-    setBoard(temp);
-  };
-
-  const rightClick = (e: React.MouseEvent<HTMLDivElement>) => {
-    e.preventDefault();
-    const temp = [...board!];
-    flag(x, y, temp);
-    setBoard(temp);
-  };
-
+const Cell = ({ value }: { value: CellData }) => {
   const displayedValue = value.flagged
     ? DISPLAY["-2"]
     : !(value.revealed || OVERRIDE)
@@ -54,10 +31,6 @@ const Cell = ({ x, y, value }: ICell) => {
 
   return (
     <div
-      onClick={leftclick}
-      onContextMenu={rightClick}
-      onMouseEnter={() => setHovered(value)}
-      onMouseLeave={() => setHovered(null)}
       className={`w-10 h-10 text-2xl font-bold flex items-center justify-center ${
         value.revealed
           ? "border-neutral-500 border-[1px]"
@@ -69,17 +42,14 @@ const Cell = ({ x, y, value }: ICell) => {
   );
 };
 
-export const Board = () => {
-  const { board } = useContext(boardContext);
+export const Board = ({ board }: { board: MinesweeperBoard }) => {
   return (
     <div className="flex flex-col">
-      {board!.map((row, i) => {
+      {board.map((row, i) => {
         return (
           <div className="flex" key={`board-${i}`}>
             {row.map((cell, j) => {
-              return (
-                <Cell value={cell} x={j} y={i} key={`cell-${i}-${j}`}></Cell>
-              );
+              return <Cell value={cell} key={`cell-${i}-${j}`}></Cell>;
             })}
           </div>
         );
