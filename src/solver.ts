@@ -1,5 +1,6 @@
 import {
   CellData,
+  farNeighbors,
   flag,
   getCounts,
   MinesweeperBoard,
@@ -187,7 +188,7 @@ export class Solver {
   // step 3: if alpha is a subset of B's neighbours, reduce.
   // step 4: if the reduction results in a simple case, flag or reveal
   move_pair(cell: CellData) {
-    // 1. count all unrevealed, unflagged tiles
+    // 1. all of A's unrevealed, unflagged tiles
     const setA = this.getHiddenUnflaggedCellNeighbours(cell);
     // all neighbours are flagged and/or revealed
     if (setA.size == 0) return;
@@ -198,42 +199,55 @@ export class Solver {
     );
     const AEffectiveMineCount = cell.value - AFlaggedMineCount;
 
-    // 2. check all neighbours for a revealed number cell
-    for (const { cell: BNeighbour } of neighbors(cell.x, cell.y, this.board)) {
-      // skip hidden and empty cells
-      if (!BNeighbour.revealed || BNeighbour.value == 0) {
-        continue;
+    // 2. any revealed number within distance 2 can share hidden cells with A,
+    // so it's a candidate partner for a subset reduction
+    for (const { cell: BNeighbour } of farNeighbors(
+      cell.x,
+      cell.y,
+      this.board,
+    )) {
+      if (this.tryReducePair(setA, AEffectiveMineCount, BNeighbour)) {
+        return;
       }
-
-      const setB = this.getHiddenUnflaggedCellNeighbours(BNeighbour);
-      // all neighbours are flagged and/or revealed
-      if (setB.size == 0) continue;
-      const { flagged: BFlaggedCount } = getCounts(
-        BNeighbour.x,
-        BNeighbour.y,
-        this.board,
-      );
-      const BEffectiveMineCount = BNeighbour.value - BFlaggedCount;
-      // do this both ways, and only do it once
-      if (
-        this.performReduction(
-          setA,
-          AEffectiveMineCount,
-          setB,
-          BEffectiveMineCount,
-        )
-      )
-        return;
-      if (
-        this.performReduction(
-          setB,
-          BEffectiveMineCount,
-          setA,
-          AEffectiveMineCount,
-        )
-      )
-        return;
     }
+  }
+
+  // try reducing A against a single partner B, in both directions.
+  // returns true if it changed the board
+  private tryReducePair(
+    setA: Set<CellData>,
+    AEffectiveMineCount: number,
+    BNeighbour: CellData,
+  ): boolean {
+    // skip hidden and empty cells
+    if (!BNeighbour.revealed || BNeighbour.value == 0) return false;
+
+    const setB = this.getHiddenUnflaggedCellNeighbours(BNeighbour);
+    // all neighbours are flagged and/or revealed
+    if (setB.size == 0) return false;
+
+    const { flagged: BFlaggedCount } = getCounts(
+      BNeighbour.x,
+      BNeighbour.y,
+      this.board,
+    );
+    const BEffectiveMineCount = BNeighbour.value - BFlaggedCount;
+
+    // do it both ways; || stops at the first that acts
+    return (
+      this.performReduction(
+        setA,
+        AEffectiveMineCount,
+        setB,
+        BEffectiveMineCount,
+      ) ||
+      this.performReduction(
+        setB,
+        BEffectiveMineCount,
+        setA,
+        AEffectiveMineCount,
+      )
+    );
   }
 
   private performReduction(

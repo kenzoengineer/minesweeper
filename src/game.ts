@@ -3,7 +3,7 @@ import { Solver } from "./solver";
 export const WIDTH = 30;
 export const HEIGHT = 16;
 export const MINES = 99;
-export const SEED = 1;
+export const SEED = 15;
 
 // mulberry32
 let rngState = SEED;
@@ -54,6 +54,23 @@ export const inBound = (x: number, y: number, board: MinesweeperBoard) => {
 export function* neighbors(x: number, y: number, board: MinesweeperBoard) {
   for (let i = -1; i < 2; i++) {
     for (let j = -1; j < 2; j++) {
+      if (i === 0 && j === 0) {
+        continue;
+      }
+      const nx = x + i;
+      const ny = y + j;
+      if (inBound(nx, ny, board)) {
+        yield { x: nx, y: ny, cell: board[ny][nx] };
+      }
+    }
+  }
+}
+
+// iterate over the (up to 24) in-bound tiles within Chebyshev distance 2 of
+// (x, y) — the 5x5 block minus the centre
+export function* farNeighbors(x: number, y: number, board: MinesweeperBoard) {
+  for (let i = -2; i < 3; i++) {
+    for (let j = -2; j < 3; j++) {
       if (i === 0 && j === 0) {
         continue;
       }

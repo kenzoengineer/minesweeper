@@ -1,6 +1,13 @@
 import { createContext, useCallback, useEffect, useRef, useState } from "react";
 import { Board } from "./Board";
-import { CellData, HEIGHT, MinesweeperBoard, SEED, setSeed, WIDTH } from "./game";
+import {
+  CellData,
+  HEIGHT,
+  MinesweeperBoard,
+  SEED,
+  setSeed,
+  WIDTH,
+} from "./game";
 import { Solver } from "./solver";
 
 type boardContextType = {
@@ -55,7 +62,7 @@ function App() {
     // and incurs the delay (no-ops are consumed inside step() with no delay)
     while (solver.step()) {
       setBoard([...solver.board]);
-      await sleep(STEP_DELAY);
+      //await sleep(STEP_DELAY);
     }
     setSolving(false);
   };
