@@ -12,7 +12,7 @@ import {
 export type StepResult = "won" | "lost" | "progress" | "stuck";
 
 export class Solver {
-  // stack grows down [top, 1, 2, bottom]
+  // LIFO stack; top of the stack is the last element (push/pop)
   stack: CellData[] = [];
   // tiles currently waiting in the queue, keyed "x,y", to avoid duplicate
   // entries. Unlike a permanent "seen" set, a tile can be re-queued later once
@@ -41,11 +41,11 @@ export class Solver {
 
   peek() {
     if (this.stack.length === 0) return null;
-    return this.stack[0];
+    return this.stack[this.stack.length - 1];
   }
 
   take() {
-    const cell = this.stack.shift();
+    const cell = this.stack.pop();
     if (cell) {
       this.inQueue.delete(`${cell.x},${cell.y}`);
     }
