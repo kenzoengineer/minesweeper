@@ -18,3 +18,5 @@
   - if we reveal a tile, neighbouring cells may now have COND 2 fulfilled, so we need to add it to the queue
 - Optimization #4:
   - subset/reduction, this solves 1-1-safe and 1-2-flag patterns
+- Optimization #5:
+  - instead of only looking at neighbours, look at cells 2 away as well. unrevealed cells can be shared between neighbours 2 away (e.g. `a ? b` instead of just `a b`)
