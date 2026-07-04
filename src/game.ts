@@ -2,7 +2,7 @@ import { Solver } from "./solver";
 
 export const WIDTH = 30;
 export const HEIGHT = 16;
-export const MINES = 60;
+export const MINES = 99;
 
 export enum ACTIONS_ENUM {
   none,
