@@ -1,14 +1,7 @@
 import { createContext, useCallback, useEffect, useRef, useState } from "react";
 import "./App.css";
 import { Board } from "./Board";
-import {
-  CellData,
-  HEIGHT,
-  iibAround,
-  MinesweeperBoard,
-  MINES,
-  WIDTH,
-} from "./game";
+import { CellData, HEIGHT, MinesweeperBoard, WIDTH } from "./game";
 import { Solver } from "./solver";
 
 type boardContextType = {
@@ -86,6 +79,8 @@ function App() {
   }, [board]);
 
   useEffect(() => {
+    // start with an empty board; mines are placed on the first reveal so the
+    // opening click is always safe (see placeMines in game.ts)
     const res = [];
     for (let i = 0; i < HEIGHT; i++) {
       res.push(
@@ -104,22 +99,8 @@ function App() {
           }),
       );
     }
-
-    let minesLeft = MINES;
-    if (WIDTH * HEIGHT < MINES) {
-      minesLeft = WIDTH * HEIGHT;
-    }
-    while (minesLeft > 0) {
-      const x = Math.floor(Math.random() * WIDTH);
-      const y = Math.floor(Math.random() * HEIGHT);
-      if (res[y][x].value != -1) {
-        res[y][x].value = -1;
-        iibAround(x, y, res);
-        minesLeft--;
-      }
-    }
     setBoard(res);
-  }, [WIDTH, HEIGHT, MINES]);
+  }, []);
   return (
     <div>
       <boardContext.Provider value={{ board, setBoard }}>

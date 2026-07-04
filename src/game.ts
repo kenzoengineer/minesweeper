@@ -1,8 +1,8 @@
 import { Solver } from "./solver";
 
-export const WIDTH = 25;
-export const HEIGHT = 25;
-export const MINES = 99;
+export const WIDTH = 16;
+export const HEIGHT = 16;
+export const MINES = 40;
 
 export enum ACTIONS_ENUM {
   none,
@@ -74,15 +74,6 @@ export const clearNew = (board: MinesweeperBoard) => {
 
 export const clearWorking = (board: MinesweeperBoard) => {
   setAll(board, { working: false });
-};
-
-// count number of mines
-export const minesAround = (x: number, y: number, board: MinesweeperBoard) => {
-  let count = 0;
-  for (const { cell } of neighbors(x, y, board)) {
-    count += cell.value === -1 ? 1 : 0;
-  }
-  return count;
 };
 
 // toggle flag in bound
@@ -158,6 +149,28 @@ const hasRevealed = (board: MinesweeperBoard) => {
   return false;
 };
 
+// populate an empty board with mines on the first reveal. The 3x3 around the
+// clicked cell (safeX, safeY) is kept mine-free, so the opening is always a 0
+// that cascades — classic Minesweeper first-click behaviour.
+const placeMines = (safeX: number, safeY: number, board: MinesweeperBoard) => {
+  const isSafe = (x: number, y: number) =>
+    Math.abs(x - safeX) <= 1 && Math.abs(y - safeY) <= 1;
+
+  // never ask for more mines than there are cells outside the safe zone
+  const safeCells = [...neighbors(safeX, safeY, board)].length + 1;
+  let minesLeft = Math.min(MINES, WIDTH * HEIGHT - safeCells);
+
+  while (minesLeft > 0) {
+    const x = Math.floor(Math.random() * WIDTH);
+    const y = Math.floor(Math.random() * HEIGHT);
+    if (board[y][x].value !== -1 && !isSafe(x, y)) {
+      board[y][x].value = -1;
+      iibAround(x, y, board);
+      minesLeft--;
+    }
+  }
+};
+
 export const revealHelper = (
   x: number,
   y: number,
@@ -194,32 +207,18 @@ const reveal = (
     return;
   }
 
-  if (board[y][x].value === -1) {
-    // START THE GAME! the first reveal of the game (nothing revealed yet) is
-    // kept safe by relocating this mine
-    if (!hasRevealed(board)) {
-      iibAround(x, y, board, -1);
-      board[y][x].value = minesAround(x, y, board);
-      // the board is bounded, we will always break
-      // eslint-disable-next-line no-constant-condition
-      while (true) {
-        const _x = Math.floor(Math.random() * WIDTH);
-        const _y = Math.floor(Math.random() * HEIGHT);
-        if (board[_y][_x].value != -1 && _x != x && _y != y) {
-          board[_y][_x].value = -1;
-          iibAround(_x, _y, board);
-          break;
-        }
+  if (!hasRevealed(board)) {
+    // first reveal of the game: now that we know where the click landed, drop
+    // the mines everywhere except this cell's 3x3 so the opening is a safe 0
+    placeMines(x, y, board);
+  } else if (board[y][x].value === -1) {
+    // hit a mine after the game has started: game over, reveal everything
+    for (let a = 0; a < HEIGHT; a++) {
+      for (let b = 0; b < WIDTH; b++) {
+        board[a][b].revealed = true;
       }
-      // END THE GAME!
-    } else {
-      for (let a = 0; a < HEIGHT; a++) {
-        for (let b = 0; b < WIDTH; b++) {
-          board[a][b].revealed = true;
-        }
-      }
-      return;
     }
+    return;
   }
 
   rib(x, y, board);
