@@ -31,7 +31,7 @@ const Cell = ({ value }: { value: CellData }) => {
 
   return (
     <div
-      className={`w-10 h-10 text-2xl font-black flex items-center justify-center ${
+      className={`w-10 h-10 text-3xl font-black flex items-center justify-center ${
         value.revealed
           ? "border-neutral-500 border-[1px]"
           : "border-t-white border-l-white border-r-neutral-500 border-b-neutral-500 border-4"
@@ -44,7 +44,7 @@ const Cell = ({ value }: { value: CellData }) => {
 
 export const Board = ({ board }: { board: MinesweeperBoard }) => {
   return (
-    <div className="flex flex-col">
+    <div className="flex flex-col border-neutral-500 border-8">
       {board.map((row, i) => {
         return (
           <div className="flex" key={`board-${i}`}>

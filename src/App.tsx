@@ -62,19 +62,15 @@ function App() {
   };
 
   return (
-    <div className="w-screen h-screen flex flex-col items-center">
-      <div>
-        <Board board={board} />
-      </div>
-      <div className="flex flex-col">
-        <button
-          onClick={solveLoop}
-          disabled={solving}
-          className="w-24 my-2 px-3 py-1 bg-neutral-700 text-white rounded disabled:opacity-50"
-        >
-          {solving ? "Solving…" : "Solve"}
-        </button>
-      </div>
+    <div className="w-screen h-screen flex flex-col items-center bg-neutral-400 font-jersey">
+      <button
+        onClick={solveLoop}
+        disabled={solving}
+        className="w-24 my-2 px-3 py-1 bg-neutral-700 text-white rounded disabled:opacity-50"
+      >
+        {solving ? "Solving…" : "Solve"}
+      </button>
+      <Board board={board} />
     </div>
   );
 }
