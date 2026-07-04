@@ -1,29 +1,59 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Board } from "./Board";
-import { HEIGHT, MinesweeperBoard, SEED, setSeed, WIDTH } from "./game";
+import { HEIGHT, MinesweeperBoard, setSeed, WIDTH } from "./game";
 import { Solver } from "./solver";
 
 const sleep = (ms: number) =>
   new Promise<void>((resolve) => setTimeout(resolve, ms));
 
+// the seed!
+let seed = 1;
 // delay between solver steps so the run is watchable
 const STEP_DELAY = 50;
 
-function App() {
-  const [board, setBoard] = useState<MinesweeperBoard>([]);
+// a fresh, mine-free board (mines are placed on the first reveal)
+const emptyBoard = (): MinesweeperBoard => {
+  const res: MinesweeperBoard = [];
+  for (let i = 0; i < HEIGHT; i++) {
+    res.push(
+      Array(WIDTH)
+        .fill(null)
+        .map((_, j) => ({
+          x: j,
+          y: i,
+          value: 0,
+          revealed: false,
+          flagged: false,
+        })),
+    );
+  }
+  return res;
+};
 
+function App() {
+  const [board, setBoard] = useState<MinesweeperBoard>(emptyBoard());
   const [solving, setSolving] = useState(false);
+
+  const solveLoop = async () => {
+    // eslint-disable-next-line no-constant-condition
+    while (true) {
+      await solve();
+      await sleep(3000);
+    }
+  };
 
   // run the solver loop, re-rendering (with a sleep) after each step so the
   // reveals/flags are visible as they happen
   const solve = async () => {
-    if (!board || solving) {
+    if (solving) {
       return;
     }
     setSolving(true);
-    // reset the RNG so a given SEED reproduces the same board + run
-    setSeed(SEED);
-    const solver = new Solver(board);
+    // fresh random seed + fresh empty board, so every run generates and solves
+    // a brand-new board
+    seed = Math.floor(Math.random() * 1000) + 1;
+    setSeed(seed);
+    const solver = new Solver(emptyBoard());
     while (solver.step()) {
       setBoard([...solver.board]);
       await sleep(STEP_DELAY);
@@ -31,41 +61,21 @@ function App() {
     setSolving(false);
   };
 
-  useEffect(() => {
-    // board begins empty, mines are populated after the first click
-    const res = [];
-    for (let i = 0; i < HEIGHT; i++) {
-      res.push(
-        Array(WIDTH)
-          .fill(null)
-          .map((_, j) => {
-            return {
-              x: j,
-              y: i,
-              value: 0,
-              revealed: false,
-              flagged: false,
-            };
-          }),
-      );
-    }
-    setBoard(res);
-  }, []);
   return (
-    <>
+    <div className="w-screen h-screen flex flex-col items-center">
       <div>
         <Board board={board} />
       </div>
       <div className="flex flex-col">
         <button
-          onClick={solve}
+          onClick={solveLoop}
           disabled={solving}
           className="w-24 my-2 px-3 py-1 bg-neutral-700 text-white rounded disabled:opacity-50"
         >
           {solving ? "Solving…" : "Solve"}
         </button>
       </div>
-    </>
+    </div>
   );
 }
 

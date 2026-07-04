@@ -2,11 +2,11 @@ import { Solver } from "./solver";
 
 export const WIDTH = 30;
 export const HEIGHT = 16;
-export const MINES = 99;
-export const SEED = 1;
+export const MINES = 70;
 
-// mulberry32
-let rngState = SEED;
+// mulberry32; seeded via setSeed() before each run, so this initial value is
+// just a placeholder
+let rngState = 1;
 export const setSeed = (seed: number) => {
   rngState = seed >>> 0;
 };
