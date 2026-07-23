@@ -4,13 +4,13 @@ import { MinesweeperBoard, setSeed } from "./game";
 import { Solver } from "./solver";
 import { useElementSize } from "./hooks/useElementSize";
 
-const sleep = (ms: number) =>
-  new Promise<void>((resolve) => setTimeout(resolve, ms));
-
-// the seed!
-let seed = 1;
 // sleep time
 const STEP_DELAY = 50;
+// taken from Board.tsx
+const CELL_SIZE = 40;
+
+const sleep = (ms: number) =>
+  new Promise<void>((resolve) => setTimeout(resolve, ms));
 
 // a fresh, mine-free board (mines are placed on the first reveal)
 const emptyBoard = (width: number, height: number): MinesweeperBoard => {
@@ -33,20 +33,20 @@ const emptyBoard = (width: number, height: number): MinesweeperBoard => {
 
 function App() {
   const { ref, size } = useElementSize();
+  const width = Math.floor(size.width / CELL_SIZE);
+  const height = Math.floor(size.height / CELL_SIZE);
+
   const [board, setBoard] = useState<MinesweeperBoard>([]);
   const [solving, setSolving] = useState(false);
 
-  // Initialize board when size is available
+  // resize side effect
   useEffect(() => {
     if (size.width > 0 && size.height > 0) {
-      // Assuming cell size of ~20px for calculation
-      const cellSize = 40;
-      const width = Math.floor(size.width / cellSize);
-      const height = Math.floor(size.height / cellSize);
       setBoard(emptyBoard(width, height));
     }
   }, [size.width, size.height]);
 
+  // keep solving boards
   const solveLoop = async () => {
     // eslint-disable-next-line no-constant-condition
     while (true) {
@@ -55,22 +55,15 @@ function App() {
     }
   };
 
-  // run the solver loop, re-rendering (with a sleep) after each step so the
-  // reveals/flags are visible as they happen
+  // solve the board
   const solve = async () => {
     if (solving) {
       return;
     }
     setSolving(true);
-    // fresh random seed + fresh empty board, so every run generates and solves
-    // a brand-new board
-    seed = Math.floor(Math.random() * 1000) + 1;
-    setSeed(seed);
-    const cellSize = 40;
-    const width = Math.floor(size.width / cellSize);
-    const height = Math.floor(size.height / cellSize);
+    setSeed(Math.floor(Math.random() * 1000) + 1);
     const solver = new Solver(emptyBoard(width, height));
-    while (solver.step()) {
+    while (solver.step() && solving) {
       setBoard([...solver.board]);
       await sleep(STEP_DELAY);
     }
