@@ -1,6 +1,6 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Board } from "./Board";
-import { HEIGHT, MinesweeperBoard, setSeed, WIDTH } from "./game";
+import { MinesweeperBoard, setSeed } from "./game";
 import { Solver } from "./solver";
 import { useElementSize } from "./hooks/useElementSize";
 
@@ -9,15 +9,15 @@ const sleep = (ms: number) =>
 
 // the seed!
 let seed = 1;
-// delay between solver steps so the run is watchable
+// sleep time
 const STEP_DELAY = 50;
 
 // a fresh, mine-free board (mines are placed on the first reveal)
-const emptyBoard = (): MinesweeperBoard => {
+const emptyBoard = (width: number, height: number): MinesweeperBoard => {
   const res: MinesweeperBoard = [];
-  for (let i = 0; i < HEIGHT; i++) {
+  for (let i = 0; i < height; i++) {
     res.push(
-      Array(WIDTH)
+      Array(width)
         .fill(null)
         .map((_, j) => ({
           x: j,
@@ -32,10 +32,20 @@ const emptyBoard = (): MinesweeperBoard => {
 };
 
 function App() {
-  const [board, setBoard] = useState<MinesweeperBoard>(emptyBoard());
+  const { ref, size } = useElementSize();
+  const [board, setBoard] = useState<MinesweeperBoard>([]);
   const [solving, setSolving] = useState(false);
 
-  const { ref, size } = useElementSize();
+  // Initialize board when size is available
+  useEffect(() => {
+    if (size.width > 0 && size.height > 0) {
+      // Assuming cell size of ~20px for calculation
+      const cellSize = 40;
+      const width = Math.floor(size.width / cellSize);
+      const height = Math.floor(size.height / cellSize);
+      setBoard(emptyBoard(width, height));
+    }
+  }, [size.width, size.height]);
 
   const solveLoop = async () => {
     // eslint-disable-next-line no-constant-condition
@@ -56,7 +66,10 @@ function App() {
     // a brand-new board
     seed = Math.floor(Math.random() * 1000) + 1;
     setSeed(seed);
-    const solver = new Solver(emptyBoard());
+    const cellSize = 40;
+    const width = Math.floor(size.width / cellSize);
+    const height = Math.floor(size.height / cellSize);
+    const solver = new Solver(emptyBoard(width, height));
     while (solver.step()) {
       setBoard([...solver.board]);
       await sleep(STEP_DELAY);
@@ -73,7 +86,7 @@ function App() {
       >
         {solving ? "Solving…" : "Solve"}
       </button>
-      <Board board={board} />
+      <Board board={board} ref={ref} />
     </div>
   );
 }

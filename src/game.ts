@@ -1,8 +1,6 @@
 import { Solver } from "./solver";
 
-export const WIDTH = 35;
-export const HEIGHT = 20;
-export const MINES = 70;
+const MINE_RATIO = 0.18;
 
 // mulberry32; seeded via setSeed() before each run, so this initial value is
 // just a placeholder
@@ -160,16 +158,22 @@ const hasRevealed = (board: MinesweeperBoard) => {
 // clicked cell (safeX, safeY) is kept mine-free, so the opening is always a 0
 // that cascades — classic Minesweeper first-click behaviour.
 const placeMines = (safeX: number, safeY: number, board: MinesweeperBoard) => {
+  const width = board[0].length;
+  const height = board.length;
   const isSafe = (x: number, y: number) =>
     Math.abs(x - safeX) <= 1 && Math.abs(y - safeY) <= 1;
 
   // never ask for more mines than there are cells outside the safe zone
   const safeCells = [...neighbors(safeX, safeY, board)].length + 1;
-  let minesLeft = Math.min(MINES, WIDTH * HEIGHT - safeCells);
+  const mineCount = Math.min(
+    Math.floor(width * height * MINE_RATIO),
+    width * height - safeCells,
+  );
+  let minesLeft = mineCount;
 
   while (minesLeft > 0) {
-    const x = Math.floor(random() * WIDTH);
-    const y = Math.floor(random() * HEIGHT);
+    const x = Math.floor(random() * width);
+    const y = Math.floor(random() * height);
     if (board[y][x].value !== -1 && !isSafe(x, y)) {
       board[y][x].value = -1;
       iibAround(x, y, board);
@@ -220,8 +224,10 @@ const reveal = (
     placeMines(x, y, board);
   } else if (board[y][x].value === -1) {
     // hit a mine after the game has started: game over, reveal everything
-    for (let a = 0; a < HEIGHT; a++) {
-      for (let b = 0; b < WIDTH; b++) {
+    const height = board.length;
+    const width = board[0].length;
+    for (let a = 0; a < height; a++) {
+      for (let b = 0; b < width; b++) {
         board[a][b].revealed = true;
       }
     }
