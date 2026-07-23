@@ -1,43 +1,36 @@
 import { CellData, MinesweeperBoard } from "./game";
 
-const OVERRIDE = false;
-
 const COLORS: Record<string, string> = {
-  "0": "text-neutral-400",
-  "1": "text-sky-600",
-  "2": "text-green-800",
-  "3": "text-red-600",
-  "4": "text-indigo-800",
-  "5": "text-rose-800",
-  "6": "text-cyan-800",
-  "7": "text-black",
-  "8": "text-neutral-500",
-  "-1": "text-white",
-};
-
-const DISPLAY: Record<string, string> = {
-  "-1": "💣",
-  "-2": "🚩",
+  "0": "bg-[#384048]",
+  "1": "bg-[#7cc7ff]",
+  "2": "bg-[#66c266]",
+  "3": "bg-[#ff7788]",
+  "4": "bg-[#ee88ff]",
+  "5": "bg-[#f472b6]",
+  "6": "bg-[#60a5fa]",
+  "7": "bg-black",
+  "8": "bg-neutral-500",
+  "-1": "bg-white",
 };
 
 const Cell = ({ value }: { value: CellData }) => {
-  const displayedValue = value.flagged
-    ? DISPLAY["-2"]
-    : !(value.revealed || OVERRIDE)
-      ? ""
-      : value.value === -1
-        ? DISPLAY["-1"]
-        : value.value;
-
   return (
     <div
-      className={`w-10 h-10 text-3xl font-black flex items-center justify-center ${
+      className={`w-10 h-10 flex items-center justify-center ${
         value.revealed
-          ? "border-neutral-500 border-[1px]"
-          : "border-t-white border-l-white border-r-neutral-500 border-b-neutral-500 border-4"
-      } bg-neutral-400 ${COLORS[value.value]}`}
+          ? "border-[#1e262e] border-[1px] bg-[#384048]"
+          : "border-t-[#707880] border-l-[#707880] border-r-[#222a32] border-b-[#222a32] border-4 bg-[#4c545c]"
+      }`}
     >
-      {displayedValue}
+      {value.flagged ? (
+        <div className="rounded-full text-[#f65454] ">▶</div>
+      ) : !value.revealed ? (
+        <div />
+      ) : (
+        <div
+          className={`w-3 h-3 rounded-full opacity-55 ${COLORS[value.value]}`}
+        />
+      )}
     </div>
   );
 };

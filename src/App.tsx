@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Board } from "./Board";
 import { HEIGHT, MinesweeperBoard, setSeed, WIDTH } from "./game";
 import { Solver } from "./solver";
+import { useElementSize } from "./hooks/useElementSize";
 
 const sleep = (ms: number) =>
   new Promise<void>((resolve) => setTimeout(resolve, ms));
@@ -33,6 +34,8 @@ const emptyBoard = (): MinesweeperBoard => {
 function App() {
   const [board, setBoard] = useState<MinesweeperBoard>(emptyBoard());
   const [solving, setSolving] = useState(false);
+
+  const { ref, size } = useElementSize();
 
   const solveLoop = async () => {
     // eslint-disable-next-line no-constant-condition

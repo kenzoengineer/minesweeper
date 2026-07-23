@@ -1,7 +1,7 @@
 import { Solver } from "./solver";
 
-export const WIDTH = 30;
-export const HEIGHT = 16;
+export const WIDTH = 35;
+export const HEIGHT = 20;
 export const MINES = 70;
 
 // mulberry32; seeded via setSeed() before each run, so this initial value is
