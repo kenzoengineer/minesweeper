@@ -17,7 +17,7 @@ const COLORS: Record<string, string> = {
 const Cell = ({ value }: { value: CellData }) => {
   return (
     <div
-      className={`w-10 h-10 flex items-center justify-center ${
+      className={`w-10 h-10 shrink-0 flex items-center justify-center ${
         value.revealed
           ? "border-[#1e262e] border-[1px] bg-[#384048]"
           : "border-t-[#707880] border-l-[#707880] border-r-[#222a32] border-b-[#222a32] border-4 bg-[#4c545c]"
@@ -45,7 +45,7 @@ export const Board = forwardRef<HTMLDivElement, { board: MinesweeperBoard }>(
       >
         {board.map((row, i) => {
           return (
-            <div className="flex" key={`board-${i}`}>
+            <div className="flex shrink-0" key={`board-${i}`}>
               {row.map((cell, j) => {
                 return <Cell value={cell} key={`cell-${i}-${j}`}></Cell>;
               })}

@@ -41,7 +41,6 @@ function App() {
   const height = Math.floor(debouncedSize.height / CELL_SIZE);
 
   const [board, setBoard] = useState<MinesweeperBoard>([]);
-  const [solving, setSolving] = useState(false);
 
   // incremented when the board is resized
   const runIdRef = useRef(0);
@@ -49,7 +48,6 @@ function App() {
   // continuously generate and solve boards until this run is cancelled
   const solve = useCallback(async () => {
     const runId = ++runIdRef.current; // claim this run, cancelling any prior one
-    setSolving(true);
     while (runIdRef.current === runId) {
       // wipe to a fresh board and solve it
       const fresh = emptyBoard(width, height);
