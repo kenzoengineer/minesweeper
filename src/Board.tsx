@@ -24,7 +24,7 @@ const Cell = ({ value }: { value: CellData }) => {
       }`}
     >
       {value.flagged ? (
-        <div className="rounded-full text-[#f65454] ">▶</div>
+        <div className="rounded-full text-[#f65454] ">▶&#xFE0E;</div>
       ) : !value.revealed ? (
         <div />
       ) : (
@@ -40,7 +40,7 @@ export const Board = forwardRef<HTMLDivElement, { board: MinesweeperBoard }>(
   ({ board }, ref) => {
     return (
       <div
-        className="flex flex-col border-neutral-500 border-8 flex-1 w-full max-h-full overflow-auto"
+        className="flex flex-col flex-1 w-full max-h-full overflow-auto"
         ref={ref}
       >
         {board.map((row, i) => {

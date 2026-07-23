@@ -1,11 +1,12 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Board } from "./Board";
 import { MinesweeperBoard, setSeed } from "./game";
 import { Solver } from "./solver";
 import { useElementSize } from "./hooks/useElementSize";
+import { useDebounced } from "./hooks/useDebounced";
 
 // sleep time
-const STEP_DELAY = 50;
+const STEP_DELAY = 20;
 // taken from Board.tsx
 const CELL_SIZE = 40;
 
@@ -33,27 +34,24 @@ const emptyBoard = (width: number, height: number): MinesweeperBoard => {
 
 function App() {
   const { ref, size } = useElementSize();
-  const width = Math.floor(size.width / CELL_SIZE);
-  const height = Math.floor(size.height / CELL_SIZE);
+  const debouncedSize = useDebounced(size, 200);
+  const width = Math.floor(debouncedSize.width / CELL_SIZE);
+  const height = Math.floor(debouncedSize.height / CELL_SIZE);
 
   const [board, setBoard] = useState<MinesweeperBoard>([]);
   const [solving, setSolving] = useState(false);
 
+  // incremented when the board is resized
+  const runIdRef = useRef(0);
+
   // resize side effect
   useEffect(() => {
-    if (size.width > 0 && size.height > 0) {
+    if (debouncedSize.width > 0 && debouncedSize.height > 0) {
+      // invalidate run
+      runIdRef.current += 1;
       setBoard(emptyBoard(width, height));
     }
-  }, [size.width, size.height]);
-
-  // keep solving boards
-  const solveLoop = async () => {
-    // eslint-disable-next-line no-constant-condition
-    while (true) {
-      await solve();
-      await sleep(3000);
-    }
-  };
+  }, [debouncedSize.width, debouncedSize.height]);
 
   // solve the board
   const solve = async () => {
@@ -62,18 +60,24 @@ function App() {
     }
     setSolving(true);
     setSeed(Math.floor(Math.random() * 1000) + 1);
-    const solver = new Solver(emptyBoard(width, height));
-    while (solver.step() && solving) {
+
+    // const board = emptyBoard(width, height);
+    // setBoard(board);
+
+    const solver = new Solver(board);
+    const current = runIdRef.current;
+    while (solver.step() && current === runIdRef.current) {
       setBoard([...solver.board]);
       await sleep(STEP_DELAY);
     }
     setSolving(false);
+    solve();
   };
 
   return (
-    <div className="w-screen h-screen flex flex-col items-center bg-neutral-400 font-jersey">
+    <div className="w-screen h-screen flex flex-col items-center bg-[#1e262e]">
       <button
-        onClick={solveLoop}
+        onClick={solve}
         disabled={solving}
         className="w-24 my-2 px-3 py-1 bg-neutral-700 text-white rounded disabled:opacity-50"
       >
