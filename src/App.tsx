@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Board } from "./Board";
 import { MinesweeperBoard, setSeed } from "./game";
 import { Solver } from "./solver";
@@ -7,6 +7,8 @@ import { useDebounced } from "./hooks/useDebounced";
 
 // sleep time
 const STEP_DELAY = 20;
+// hold on a finished board this long before wiping to the next one
+const BOARD_PAUSE = 1000;
 // taken from Board.tsx
 const CELL_SIZE = 40;
 
@@ -44,45 +46,39 @@ function App() {
   // incremented when the board is resized
   const runIdRef = useRef(0);
 
-  // resize side effect
-  useEffect(() => {
-    if (debouncedSize.width > 0 && debouncedSize.height > 0) {
-      // invalidate run
-      runIdRef.current += 1;
-      setBoard(emptyBoard(width, height));
-    }
-  }, [debouncedSize.width, debouncedSize.height]);
-
-  // solve the board
-  const solve = async () => {
-    if (solving) {
-      return;
-    }
+  // continuously generate and solve boards until this run is cancelled
+  const solve = useCallback(async () => {
+    const runId = ++runIdRef.current; // claim this run, cancelling any prior one
     setSolving(true);
-    setSeed(Math.floor(Math.random() * 1000) + 1);
-
-    // const board = emptyBoard(width, height);
-    // setBoard(board);
-
-    const solver = new Solver(board);
-    const current = runIdRef.current;
-    while (solver.step() && current === runIdRef.current) {
-      setBoard([...solver.board]);
-      await sleep(STEP_DELAY);
+    while (runIdRef.current === runId) {
+      // wipe to a fresh board and solve it
+      const fresh = emptyBoard(width, height);
+      setBoard(fresh);
+      setSeed(Math.floor(Math.random() * 1000) + 1);
+      const solver = new Solver(fresh);
+      while (solver.step()) {
+        if (runIdRef.current !== runId) return; // cancelled mid-solve
+        setBoard([...solver.board]);
+        await sleep(STEP_DELAY);
+      }
+      if (runIdRef.current !== runId) return;
+      // hold on the finished board one beat before wiping to the next
+      await sleep(BOARD_PAUSE);
     }
-    setSolving(false);
-    solve();
-  };
+  }, [width, height]);
+
+  // auto-start on mount; restart whenever the (debounced) board size changes
+  useEffect(() => {
+    if (width > 0 && height > 0) {
+      solve();
+    }
+    return () => {
+      runIdRef.current += 1; // cancel the running loop on resize / unmount
+    };
+  }, [solve, width, height]);
 
   return (
     <div className="w-screen h-screen flex flex-col items-center bg-[#1e262e]">
-      <button
-        onClick={solve}
-        disabled={solving}
-        className="w-24 my-2 px-3 py-1 bg-neutral-700 text-white rounded disabled:opacity-50"
-      >
-        {solving ? "Solving…" : "Solve"}
-      </button>
       <Board board={board} ref={ref} />
     </div>
   );
