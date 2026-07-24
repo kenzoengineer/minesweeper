@@ -15,21 +15,30 @@ export class Chaser {
     this.height = board.length;
 
     this.hunters = [new Knight(0, 0, true)];
-    this.victims = [new Rook(10, 10, false)];
+    this.victims = [new Rook(this.width - 1, this.height - 1, false)];
   }
 
   step(): Piece[] {
     for (let i = 0; i < this.hunters.length; i++) {
       const hunter = this.hunters[i];
       const victim = this.victims[i];
-      const { x, y } = hunter.moveTowards(hunter.x, hunter.y, victim.x, victim.y);
+      const { x, y } = hunter.moveTowards(
+        hunter.x,
+        hunter.y,
+        victim.x,
+        victim.y,
+        this.width,
+        this.height,
+      );
       hunter.x = x;
       hunter.y = y;
 
-      // caught!
+      // caught! respawn the victim somewhere else on the board
       if (hunter.x == victim.x && hunter.y == victim.y) {
-        victim.x = Math.floor(Math.random() * this.height);
-        victim.y = Math.floor(Math.random() * this.width);
+        do {
+          victim.x = Math.floor(Math.random() * this.width);
+          victim.y = Math.floor(Math.random() * this.height);
+        } while (victim.x === hunter.x && victim.y === hunter.y);
       }
     }
     return [...this.hunters, ...this.victims];
