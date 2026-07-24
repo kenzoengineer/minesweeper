@@ -7,6 +7,7 @@ export interface Piece {
   x: number,
   y: number,
   hunter: boolean,
+  speed: number,
   moveTowards(x: number, y: number, tx: number, ty: number, width: number, height: number): coord;
 }
 
@@ -14,9 +15,11 @@ export class Rook implements Piece {
   x;
   y;
   hunter;
+  speed;
   constructor(x: number, y: number, hunter: boolean) {
     this.x = x;
     this.y = y;
+    this.speed = 5;
     this.hunter = hunter;
   }
   moveTowards(x: number, y: number, tx: number, ty: number, _width: number, _height: number): coord {
@@ -32,10 +35,12 @@ export class Rook implements Piece {
 export class Knight implements Piece {
   x;
   y;
+  speed;
   hunter;
   constructor(x: number, y: number, hunter: boolean) {
     this.x = x;
     this.y = y;
+    this.speed = 1;
     this.hunter = hunter;
   }
   moveTowards(x: number, y: number, tx: number, ty: number, width: number, height: number): coord {

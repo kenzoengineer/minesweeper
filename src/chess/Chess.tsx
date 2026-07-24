@@ -1,27 +1,15 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import ChessBoard, { ChessBoardData } from "./ChessBoard";
+import ChessBoard from "./ChessBoard";
 import { useDimensions } from "../DimensionsContext";
 import { Chaser } from "./chaser";
 import { Piece } from "./game";
 import { sleep } from "../utils";
 
 // ms between hunter moves
-const STEP_DELAY = 50;
-
-// a full-screen grid of empty squares, sized to the shared window dimensions
-const emptyBoard = (width: number, height: number): ChessBoardData => {
-  return Array(height)
-    .fill(null)
-    .map((_, i) =>
-      Array(width)
-        .fill(null)
-        .map((_, j) => ({ x: j, y: i, piece: null })),
-    );
-};
+const STEP_DELAY = 100;
 
 const Chess = () => {
   const { width, height } = useDimensions();
-  const [board, setBoard] = useState<ChessBoardData>([]);
   const [pieces, setPieces] = useState<Piece[]>([]);
 
   // incremented to cancel the running loop on resize / unmount
@@ -30,10 +18,7 @@ const Chess = () => {
   const runLoop = useCallback(async () => {
     const runId = ++runIdRef.current; // claim this run, cancelling any prior one
 
-    const grid = emptyBoard(width, height);
-    setBoard(grid);
-
-    const chaser = new Chaser(grid);
+    const chaser = new Chaser(width, height);
     while (runIdRef.current === runId) {
       setPieces(chaser.step());
       await sleep(STEP_DELAY);
@@ -52,7 +37,7 @@ const Chess = () => {
 
   return (
     <div className="w-screen flex flex-col bg-[#1e262e]">
-      <ChessBoard pieces={pieces} board={board}></ChessBoard>
+      <ChessBoard width={width} height={height} pieces={pieces} />
     </div>
   );
 };

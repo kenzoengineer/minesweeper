@@ -1,54 +1,56 @@
+import { memo } from "react";
+import { CELL_SIZE } from "../DimensionsContext";
 import { Piece } from "./game";
 
-export type ChessSquare = {
-  x: number;
-  y: number;
-  piece: string | null;
-};
-
-export type ChessBoardData = ChessSquare[][];
 interface ChessBoardProps {
+  width: number;
+  height: number;
   pieces: Piece[];
-  board: ChessBoardData;
 }
 
-const ChessBoard = ({ pieces, board }: ChessBoardProps) => {
-  // index pieces by square so each cell is an O(1) lookup
-  const pieceAt = new Map<string, Piece>();
-  for (const piece of pieces) {
-    pieceAt.set(`${piece.x},${piece.y}`, piece);
-  }
-
+const ChessBoard = ({ width, height, pieces }: ChessBoardProps) => {
   return (
     <div className="flex flex-col flex-1 items-center w-full max-h-full overflow-auto">
-      {board.map((row, i) => {
-        return (
-          <div className="flex shrink-0" key={`chessboard-${i}`}>
-            {row.map((square, j) => {
-              return (
-                <Square
-                  square={square}
-                  piece={pieceAt.get(`${square.x},${square.y}`)}
-                  key={`chesssquare-${i}-${j}`}
-                />
-              );
-            })}
-          </div>
-        );
-      })}
+      <div
+        className="relative shrink-0"
+        style={{ width: width * CELL_SIZE, height: height * CELL_SIZE }}
+      >
+        <Grid width={width} height={height} />
+        {pieces.map((piece, i) => (
+          <Marker piece={piece} key={`piece-${i}`} />
+        ))}
+      </div>
     </div>
   );
 };
 
-const Square = ({ square, piece }: { square: ChessSquare; piece?: Piece }) => {
+const Grid = memo(({ width, height }: { width: number; height: number }) => {
+  return (
+    <>
+      {Array.from({ length: height }, (_, y) => (
+        <div className="flex" key={`row-${y}`}>
+          {Array.from({ length: width }, (_, x) => (
+            <div
+              key={`cell-${x}-${y}`}
+              className={`${x % 2 === y % 2 ? "bg-[#384048]" : "bg-[#4c545c]"} w-10 h-10 shrink-0`}
+            />
+          ))}
+        </div>
+      ))}
+    </>
+  );
+});
+
+// absolutely positioned pieces
+const Marker = ({ piece }: { piece: Piece }) => {
   return (
     <div
-      className={`${square.x % 2 === square.y % 2 ? "bg-[#384048]" : "bg-[#4c545c]"}
-      w-10 h-10 shrink-0 flex items-center justify-center`}
+      className="absolute transition-all duration-75 left-0 top-0 w-10 h-10 flex items-center justify-center"
+      style={{
+        transform: `translate(${piece.x * CELL_SIZE}px, ${piece.y * CELL_SIZE}px)`,
+      }}
     >
-      {piece ? (
-        <div className={`w-4 h-4 ${piece.hunter ? "bg-white" : "bg-black"}`} />
-      ) : null}
+      <div className={`w-4 h-4 ${piece.hunter ? "bg-white" : "bg-black"}`} />
     </div>
   );
 };

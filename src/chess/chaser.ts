@@ -1,27 +1,31 @@
-import { ChessBoardData } from "./ChessBoard";
 import { Knight, Piece, Rook } from "./game";
 
 export class Chaser {
-  board: ChessBoardData;
   hunters: Piece[];
   victims: Piece[];
 
   private width: number;
   private height: number;
+  private tick: number;
 
-  constructor(board: ChessBoardData) {
-    this.board = board;
-    this.width = board[0]?.length ?? 0;
-    this.height = board.length;
+  constructor(width: number, height: number) {
+    this.width = width;
+    this.height = height;
 
-    this.hunters = [new Knight(0, 0, true)];
-    this.victims = [new Rook(this.width - 1, this.height - 1, false)];
+    this.tick = 0;
+
+    this.hunters = [new Knight(0, 0, true), new Rook(5,5, true)];
+    this.victims = [new Rook(width - 1, height - 1, false), new Rook(2, 2, false)];
   }
 
   step(): Piece[] {
+    this.tick++;
     for (let i = 0; i < this.hunters.length; i++) {
       const hunter = this.hunters[i];
       const victim = this.victims[i];
+      if (this.tick % hunter.speed != 0) {
+        continue;
+      }
       const { x, y } = hunter.moveTowards(
         hunter.x,
         hunter.y,
