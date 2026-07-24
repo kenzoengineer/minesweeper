@@ -2,15 +2,12 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { Board } from "./Board";
 import { MinesweeperBoard, setSeed } from "./game";
 import { Solver } from "./solver";
-import { useElementSize } from "../hooks/useElementSize";
-import { useDebounced } from "../hooks/useDebounced";
+import { useDimensions } from "../DimensionsContext";
 
 // sleep time
 const STEP_DELAY = 20;
 // hold on a finished board this long before wiping to the next one
 const BOARD_PAUSE = 1000;
-// taken from Board.tsx
-const CELL_SIZE = 40;
 
 const sleep = (ms: number) =>
   new Promise<void>((resolve) => setTimeout(resolve, ms));
@@ -18,7 +15,8 @@ const sleep = (ms: number) =>
 // a fresh, mine-free board (mines are placed on the first reveal)
 const emptyBoard = (width: number, height: number): MinesweeperBoard => {
   const res: MinesweeperBoard = [];
-  for (let i = 0; i < height; i++) {
+  // fill it an extra 2 so we fill for sure
+  for (let i = 0; i < height + 2; i++) {
     res.push(
       Array(width)
         .fill(null)
@@ -35,10 +33,7 @@ const emptyBoard = (width: number, height: number): MinesweeperBoard => {
 };
 
 export const Minesweeper = () => {
-  const { ref, size } = useElementSize();
-  const debouncedSize = useDebounced(size, 200);
-  const width = Math.floor(debouncedSize.width / CELL_SIZE);
-  const height = Math.floor(debouncedSize.height / CELL_SIZE);
+  const { width, height } = useDimensions();
 
   const [board, setBoard] = useState<MinesweeperBoard>([]);
 
@@ -75,5 +70,5 @@ export const Minesweeper = () => {
     };
   }, [solve, width, height]);
 
-  return <Board board={board} ref={ref} />;
+  return <Board board={board} />;
 };

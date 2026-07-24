@@ -1,20 +1,24 @@
-import { useState } from "react";
+import { useMemo } from "react";
 import ChessBoard, { ChessBoardData } from "./ChessBoard";
+import { useDimensions } from "../DimensionsContext";
 
-const emptyBoard = () => {
-  return Array(8)
+// a full-screen grid of empty squares, sized to the shared window dimensions
+const emptyBoard = (width: number, height: number): ChessBoardData => {
+  return Array(height)
     .fill(null)
     .map((_, i) =>
-      Array(8)
+      Array(width)
         .fill(null)
-        .map((_, j) => ({ x: i, y: j, piece: null })),
+        .map((_, j) => ({ x: j, y: i, piece: null })),
     );
 };
 
 const Chess = () => {
-  const [board, setBoard] = useState<ChessBoardData>(emptyBoard());
+  const { width, height } = useDimensions();
+  const board = useMemo(() => emptyBoard(width, height), [width, height]);
+
   return (
-    <div className="w-screen h-screen flex flex-col bg-[#1e262e]">
+    <div className="w-screen flex flex-col bg-[#1e262e]">
       <ChessBoard board={board}></ChessBoard>
     </div>
   );

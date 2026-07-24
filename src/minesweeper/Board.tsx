@@ -1,4 +1,3 @@
-import { forwardRef } from "react";
 import { CellData, MinesweeperBoard } from "./game";
 
 const COLORS: Record<string, string> = {
@@ -37,23 +36,18 @@ const Cell = ({ value }: { value: CellData }) => {
   );
 };
 
-export const Board = forwardRef<HTMLDivElement, { board: MinesweeperBoard }>(
-  ({ board }, ref) => {
-    return (
-      <div
-        className="flex flex-col flex-1 items-center w-full max-h-full overflow-auto"
-        ref={ref}
-      >
-        {board.map((row, i) => {
-          return (
-            <div className="flex shrink-0" key={`board-${i}`}>
-              {row.map((cell, j) => {
-                return <Cell value={cell} key={`cell-${i}-${j}`}></Cell>;
-              })}
-            </div>
-          );
-        })}
-      </div>
-    );
-  },
-);
+export const Board = ({ board }: { board: MinesweeperBoard }) => {
+  return (
+    <div className="flex flex-col flex-1 items-center w-full max-h-full overflow-auto">
+      {board.map((row, i) => {
+        return (
+          <div className="flex shrink-0" key={`board-${i}`}>
+            {row.map((cell, j) => {
+              return <Cell value={cell} key={`cell-${i}-${j}`}></Cell>;
+            })}
+          </div>
+        );
+      })}
+    </div>
+  );
+};

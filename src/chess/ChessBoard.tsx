@@ -11,7 +11,7 @@ interface ChessBoardProps {
 
 const ChessBoard = ({ board }: ChessBoardProps) => {
   return (
-    <div className="w-screen h-screen flex flex-col bg-[#1e262e]">
+    <div className="flex flex-col flex-1 items-center w-full max-h-full overflow-auto">
       {board.map((row, i) => {
         return (
           <div className="flex shrink-0" key={`chessboard-${i}`}>
