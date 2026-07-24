@@ -1,6 +1,6 @@
 import { Minesweeper } from "./minesweeper/Minesweeper";
 
-export const Header = () => {
+const Header = () => {
   return (
     <div className="w-screen flex flex-col bg-[#1e262e]">
       <Minesweeper />
@@ -36,3 +36,5 @@ const HeaderLink = ({ text, link }: { text: string; link: string }) => {
     </a>
   );
 };
+
+export default Header;

@@ -1,12 +1,12 @@
-import Chess from "./chess/Chess";
-import { Header } from "./Header";
+import Header from "./Header";
 import { DimensionsProvider } from "./DimensionsContext";
+import Career from "./Career";
 
 function App() {
   return (
     <DimensionsProvider>
       <Header />
-      <Chess />
+      <Career />
     </DimensionsProvider>
   );
 }
