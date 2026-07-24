@@ -19,7 +19,7 @@ export class Rook implements Piece {
     this.y = y;
     this.hunter = hunter;
   }
-  moveTowards(x: number, y: number, tx: number, ty: number): coord {
+  moveTowards(x: number, y: number, tx: number, ty: number, _width: number, _height: number): coord {
     const dx = Math.abs(tx - x);
     const dy = Math.abs(ty - y);
     if (dx > dy) {
@@ -72,8 +72,6 @@ export const bfs = (
   const start = `${x}.${y}`;
   const queue = [[x, y]];
   const parent = new Map<string, string>();
-  // mark on enqueue (not dequeue) so each square is queued exactly once and its
-  // parent pointer is never overwritten — otherwise the path isn't shortest
   const visited = new Set<string>([start]);
 
   while (queue.length > 0) {
@@ -106,6 +104,6 @@ export const bfs = (
     }
   }
 
-  // unreachable — stay put
+  // unreachable
   return { x, y };
 }
