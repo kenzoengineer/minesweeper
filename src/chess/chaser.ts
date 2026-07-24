@@ -1,4 +1,4 @@
-import { Knight, Piece, Rook } from "./game";
+import { Bishop, Knight, Piece, Rook } from "./game";
 
 export class Chaser {
   hunters: Piece[];
@@ -14,8 +14,8 @@ export class Chaser {
 
     this.tick = 0;
 
-    this.hunters = [new Knight(0, 0, true), new Rook(5,5, true)];
-    this.victims = [new Rook(width - 1, height - 1, false), new Rook(2, 2, false)];
+    this.hunters = [new Knight(0, 0, true), new Rook(5, 5, true)];
+    this.victims = [new Bishop(5, 5, false),new Bishop(5, 5, false)];
   }
 
   step(): Piece[] {
@@ -26,23 +26,11 @@ export class Chaser {
       if (this.tick % hunter.speed != 0) {
         continue;
       }
-      const { x, y } = hunter.moveTowards(
-        hunter.x,
-        hunter.y,
-        victim.x,
-        victim.y,
-        this.width,
-        this.height,
-      );
-      hunter.x = x;
-      hunter.y = y;
+      hunter.moveTowards(victim.x, victim.y, this.width, this.height);
 
       // caught! respawn the victim somewhere else on the board
       if (hunter.x == victim.x && hunter.y == victim.y) {
-        do {
-          victim.x = Math.floor(Math.random() * this.width);
-          victim.y = Math.floor(Math.random() * this.height);
-        } while (victim.x === hunter.x && victim.y === hunter.y);
+        victim.moveRandomLegal(5, this.width, this.height);
       }
     }
     return [...this.hunters, ...this.victims];

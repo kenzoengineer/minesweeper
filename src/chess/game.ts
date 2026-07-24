@@ -1,14 +1,17 @@
+import { clamp } from "../utils";
+
 type coord = {
   x: number,
   y: number
 };
 
 export interface Piece {
-  x: number,
-  y: number,
-  hunter: boolean,
-  speed: number,
-  moveTowards(x: number, y: number, tx: number, ty: number, width: number, height: number): coord;
+  x: number;
+  y: number;
+  hunter: boolean;
+  speed: number;
+  moveTowards(tx: number, ty: number, width: number, height: number): void;
+  moveRandomLegal(steps: number, width: number, height: number): void;
 }
 
 export class Rook implements Piece {
@@ -22,13 +25,21 @@ export class Rook implements Piece {
     this.speed = 5;
     this.hunter = hunter;
   }
-  moveTowards(x: number, y: number, tx: number, ty: number, _width: number, _height: number): coord {
-    const dx = Math.abs(tx - x);
-    const dy = Math.abs(ty - y);
+  moveTowards(tx: number, ty: number, _width: number, _height: number): void {
+    const dx = Math.abs(tx - this.x);
+    const dy = Math.abs(ty - this.y);
     if (dx > dy) {
-      return { x: tx, y };
+      this.x = tx;
+    } else {
+      this.y = ty;
     }
-    return { x, y: ty };
+  }
+
+  moveRandomLegal(steps: number, width: number, height: number): void {
+    const directionMap = [[-1, 0], [1, 0], [0, -1], [0, 1]];
+    const direction = directionMap[Math.floor(Math.random() * 4)];
+    this.x = clamp(this.x + direction[0] * steps, 0, width);
+    this.y = clamp(this.y + direction[1] * steps, 0, height);
   }
 }
 
@@ -43,9 +54,14 @@ export class Knight implements Piece {
     this.speed = 1;
     this.hunter = hunter;
   }
-  moveTowards(x: number, y: number, tx: number, ty: number, width: number, height: number): coord {
-    return bfs(x, y, tx, ty, width, height);
+  moveTowards(tx: number, ty: number, width: number, height: number): void {
+    const { x, y } = bfs(this.x, this.y, tx, ty, width, height);
+    this.x = x;
+    this.y = y;
   }
+
+  // TODO
+  moveRandomLegal(_steps: number, _width: number, _height: number): void {}
 }
 
 const MOVE_ARRAY = [
@@ -111,4 +127,28 @@ export const bfs = (
 
   // unreachable
   return { x, y };
+}
+
+export class Bishop implements Piece {
+  x;
+  y;
+  hunter;
+  speed;
+  constructor(x: number, y: number, hunter: boolean) {
+    this.x = x;
+    this.y = y;
+    this.speed = 1;
+    this.hunter = hunter;
+  }
+
+  // TODO (non-trivial)
+  moveTowards(_tx: number, _ty: number, _width: number, _height: number): void {}
+
+  moveRandomLegal(steps: number, width: number, height: number): void {
+    const directionMap = [[-1, -1], [1, 1], [1, -1], [-1, 1]];
+    const direction = directionMap[Math.floor(Math.random() * 4)];
+    this.x = clamp(this.x + direction[0] * steps, 0, width);
+    this.y = clamp(this.y + direction[1] * steps, 0, height);
+  }
+
 }
