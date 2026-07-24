@@ -18,6 +18,7 @@ export class Chaser {
     this.victims = [new Bishop(5, 5, false),new Bishop(5, 5, false)];
   }
 
+  // TODO: prevent pieces from moving into each other
   step(): Piece[] {
     this.tick++;
     for (let i = 0; i < this.hunters.length; i++) {
