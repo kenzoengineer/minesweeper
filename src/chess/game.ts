@@ -1,5 +1,3 @@
-import { clamp } from "../utils";
-
 type coord = {
   x: number,
   y: number
@@ -13,6 +11,30 @@ export interface Piece {
   moveTowards(tx: number, ty: number, width: number, height: number): void;
   moveRandomLegal(steps: number, width: number, height: number): void;
 }
+
+const ROOK_DIRECTIONS = [[-1, 0], [1, 0], [0, -1], [0, 1]];
+const BISHOP_DIRECTIONS = [[-1, -1], [1, 1], [1, -1], [-1, 1]];
+
+// check every direction, starting randomly, and only accept if it moved
+const stepRandom = (
+  piece: Piece,
+  directions: number[][],
+  steps: number,
+  width: number,
+  height: number,
+): void => {
+  const start = Math.floor(Math.random() * directions.length);
+  for (let k = 0; k < directions.length; k++) {
+    const [dx, dy] = directions[(start + k) % directions.length];
+    const nx = piece.x + dx * steps;
+    const ny = piece.y + dy * steps;
+    if (nx >= 0 && nx < width && ny >= 0 && ny < height) {
+      piece.x = nx;
+      piece.y = ny;
+      return;
+    }
+  }
+};
 
 export class Rook implements Piece {
   x;
@@ -36,10 +58,7 @@ export class Rook implements Piece {
   }
 
   moveRandomLegal(steps: number, width: number, height: number): void {
-    const directionMap = [[-1, 0], [1, 0], [0, -1], [0, 1]];
-    const direction = directionMap[Math.floor(Math.random() * 4)];
-    this.x = clamp(this.x + direction[0] * steps, 0, width);
-    this.y = clamp(this.y + direction[1] * steps, 0, height);
+    stepRandom(this, ROOK_DIRECTIONS, steps, width, height);
   }
 }
 
@@ -145,10 +164,7 @@ export class Bishop implements Piece {
   moveTowards(_tx: number, _ty: number, _width: number, _height: number): void {}
 
   moveRandomLegal(steps: number, width: number, height: number): void {
-    const directionMap = [[-1, -1], [1, 1], [1, -1], [-1, 1]];
-    const direction = directionMap[Math.floor(Math.random() * 4)];
-    this.x = clamp(this.x + direction[0] * steps, 0, width);
-    this.y = clamp(this.y + direction[1] * steps, 0, height);
+    stepRandom(this, BISHOP_DIRECTIONS, steps, width, height);
   }
 
 }
