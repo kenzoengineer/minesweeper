@@ -1,6 +1,9 @@
-import { useMemo } from "react";
+import { useEffect, useState } from "react";
 import ChessBoard, { ChessBoardData } from "./ChessBoard";
 import { useDimensions } from "../DimensionsContext";
+import { Chaser } from "./chaser";
+import { bfs, Piece } from "./game";
+import { sleep } from "../utils";
 
 // a full-screen grid of empty squares, sized to the shared window dimensions
 const emptyBoard = (width: number, height: number): ChessBoardData => {
@@ -9,17 +12,30 @@ const emptyBoard = (width: number, height: number): ChessBoardData => {
     .map((_, i) =>
       Array(width)
         .fill(null)
-        .map((_, j) => ({ x: j, y: i, piece: null })),
+        .map((_, j) => ({ x: i, y: j, piece: null })),
     );
 };
 
 const Chess = () => {
   const { width, height } = useDimensions();
-  const board = useMemo(() => emptyBoard(width, height), [width, height]);
+  const [board, setBoard] = useState<ChessBoardData>(emptyBoard(width, height));
+  const [pieces, setPieces] = useState<Piece[]>([]);
+  useEffect(() => {
+    runLoop();
+  }, []);
+
+  const runLoop = async () => {
+    const chaser = new Chaser(board);
+    while (true) {
+      const newPieces = chaser.step();
+      setPieces(newPieces);
+      await sleep(1000);
+    }
+  }
 
   return (
     <div className="w-screen flex flex-col bg-[#1e262e]">
-      <ChessBoard board={board}></ChessBoard>
+      <ChessBoard pieces={pieces} board={board}></ChessBoard>
     </div>
   );
 };

@@ -3,14 +3,12 @@ import { Board } from "./Board";
 import { MinesweeperBoard, setSeed } from "./game";
 import { Solver } from "./solver";
 import { useDimensions } from "../DimensionsContext";
+import { sleep } from "../utils";
 
 // sleep time
 const STEP_DELAY = 20;
 // hold on a finished board this long before wiping to the next one
 const BOARD_PAUSE = 1000;
-
-const sleep = (ms: number) =>
-  new Promise<void>((resolve) => setTimeout(resolve, ms));
 
 // a fresh, mine-free board (mines are placed on the first reveal)
 const emptyBoard = (width: number, height: number): MinesweeperBoard => {
