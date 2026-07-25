@@ -16,7 +16,10 @@ const Header = () => {
         </pre>
         <div className="flex gap-4">
           <HeaderLink text="GitHub" link="https://github.com/kenzoengineer" />
-          <HeaderLink text="LinkedIn" link="https://linkedin.com/in/kenjiang" />
+          <HeaderLink
+            text="LinkedIn"
+            link="https://www.linkedin.com/in/ken-jiang"
+          />
           <HeaderLink text="Email" link="mailto:ken.jiang@example.com" />
         </div>
       </div>
