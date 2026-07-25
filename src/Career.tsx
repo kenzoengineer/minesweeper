@@ -9,7 +9,7 @@ const Career = () => {
       <div
         className={`bg-[#1e262e] bg-opacity-85 text-white absolute
         left-1/2 translate-x-[-50%] top-1/2 transition-all
-        translate-y-[-50%] flex flex-col items-center px-10 py-5 w-max ${open ? "min-h-96" : "min-h-64"}`}
+        translate-y-[-50%] flex flex-col items-center px-10 py-5 w-max min-h-64`}
       >
         <div className="flex max-lg:flex-col">
           <div className="flex flex-col items-center">
@@ -36,8 +36,9 @@ const Career = () => {
               time="Jan '24 - Apr '24"
             />
             <div
-              className={`overflow-hidden transition-all duration-500 ${open ? "max-h-96 opacity-100" : "max-h-0 opacity-0"}`}
+              className={`grid transition-all duration-500 ease-in-out ${open ? "grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0"}`}
             >
+              <div className="overflow-hidden">
               <Experience
                 svg="svgs/senstar.svg"
                 company="Senstar"
@@ -59,6 +60,7 @@ const Career = () => {
                 location="Markham"
                 time="Sep '21 - Dec '21"
               />
+              </div>
             </div>
           </div>
           <div className="lg:w-1 max-lg:h-1 bg-white lg:mx-8 max-lg:my-8" />
@@ -98,7 +100,7 @@ const Career = () => {
           </div>
         </div>
         <button
-          className="w-fit opacity-80"
+          className="w-fit opacity-80 max-lg:hidden"
           onClick={() => {
             setOpen(!open);
           }}

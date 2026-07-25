@@ -1,4 +1,4 @@
-import { Bishop, King, Knight, Piece, Rook } from "./game";
+import { Bishop, Knight, Piece, Rook } from "./game";
 
 export class Chaser {
   hunters: Piece[];
