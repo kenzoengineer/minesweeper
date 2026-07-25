@@ -20,7 +20,7 @@ const Header = () => {
             text="LinkedIn"
             link="https://www.linkedin.com/in/ken-jiang"
           />
-          <HeaderLink text="Email" link="mailto:ken.jiang@example.com" />
+          <HeaderLink text="Email" link="mailto:kenzoengineer@gmail.com" />
         </div>
       </div>
     </div>
