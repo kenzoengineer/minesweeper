@@ -6,7 +6,7 @@ import { Piece } from "./game";
 import { sleep } from "../utils";
 
 // ms between hunter moves
-const STEP_DELAY = 100;
+const STEP_DELAY = 200;
 
 const Chess = () => {
   const { width, height } = useDimensions();

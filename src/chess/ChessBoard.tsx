@@ -50,7 +50,11 @@ const Marker = ({ piece }: { piece: Piece }) => {
         transform: `translate(${piece.x * CELL_SIZE}px, ${piece.y * CELL_SIZE}px)`,
       }}
     >
-      <div className={`w-4 h-4 ${piece.hunter ? "bg-white" : "bg-black"}`} />
+      <div
+        className={`w-4 h-4 ${piece.hunter ? "text-white z-10" : "text-black z-0"}`}
+      >
+        {piece.icon && <piece.icon className="w-full h-full scale-125" />}
+      </div>
     </div>
   );
 };

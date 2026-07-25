@@ -1,19 +1,45 @@
-type coord = {
-  x: number,
-  y: number
-};
+import { IconType } from "react-icons";
+import {
+  FaChessKnight,
+  FaChessRook,
+  FaChessBishop,
+  FaChessKing,
+} from "react-icons/fa";
 
-export interface Piece {
+type coord = {
   x: number;
   y: number;
-  hunter: boolean;
-  speed: number;
-  moveTowards(tx: number, ty: number, width: number, height: number): void;
-  moveRandomLegal(steps: number, width: number, height: number): void;
+};
+
+export abstract class Piece {
+  constructor(
+    public x: number,
+    public y: number,
+    public hunter: boolean,
+    public speed: number,
+    public icon: IconType,
+  ) {}
+  abstract moveTowards(
+    tx: number,
+    ty: number,
+    width: number,
+    height: number,
+  ): void;
+  abstract moveRandomLegal(steps: number, width: number, height: number): void;
 }
 
-const ROOK_DIRECTIONS = [[-1, 0], [1, 0], [0, -1], [0, 1]];
-const BISHOP_DIRECTIONS = [[-1, -1], [1, 1], [1, -1], [-1, 1]];
+const ROOK_DIRECTIONS = [
+  [-1, 0],
+  [1, 0],
+  [0, -1],
+  [0, 1],
+];
+const BISHOP_DIRECTIONS = [
+  [-1, -1],
+  [1, 1],
+  [1, -1],
+  [-1, 1],
+];
 
 // check every direction, starting randomly, and only accept if it moved
 const stepRandom = (
@@ -36,17 +62,11 @@ const stepRandom = (
   }
 };
 
-export class Rook implements Piece {
-  x;
-  y;
-  hunter;
-  speed;
+export class Rook extends Piece {
   constructor(x: number, y: number, hunter: boolean) {
-    this.x = x;
-    this.y = y;
-    this.speed = 5;
-    this.hunter = hunter;
+    super(x, y, hunter, 5, FaChessRook);
   }
+
   moveTowards(tx: number, ty: number, _width: number, _height: number): void {
     const dx = Math.abs(tx - this.x);
     const dy = Math.abs(ty - this.y);
@@ -62,16 +82,9 @@ export class Rook implements Piece {
   }
 }
 
-export class Knight implements Piece {
-  x;
-  y;
-  speed;
-  hunter;
+export class Knight extends Piece {
   constructor(x: number, y: number, hunter: boolean) {
-    this.x = x;
-    this.y = y;
-    this.speed = 1;
-    this.hunter = hunter;
+    super(x, y, hunter, 1, FaChessKnight);
   }
   moveTowards(tx: number, ty: number, width: number, height: number): void {
     const { x, y } = bfs(this.x, this.y, tx, ty, width, height);
@@ -91,7 +104,7 @@ const MOVE_ARRAY = [
   [-2, -1],
   [-2, 1],
   [2, -1],
-  [2, 1]
+  [2, 1],
 ];
 
 // the first step of a shortest knight path from (x, y) to (tx, ty), bounded to
@@ -146,25 +159,50 @@ export const bfs = (
 
   // unreachable
   return { x, y };
-}
+};
 
-export class Bishop implements Piece {
-  x;
-  y;
-  hunter;
-  speed;
+export class Bishop extends Piece {
   constructor(x: number, y: number, hunter: boolean) {
-    this.x = x;
-    this.y = y;
-    this.speed = 1;
-    this.hunter = hunter;
+    super(x, y, hunter, 1, FaChessBishop);
   }
 
   // TODO (non-trivial)
-  moveTowards(_tx: number, _ty: number, _width: number, _height: number): void {}
+  moveTowards(
+    _tx: number,
+    _ty: number,
+    _width: number,
+    _height: number,
+  ): void {}
 
   moveRandomLegal(steps: number, width: number, height: number): void {
     stepRandom(this, BISHOP_DIRECTIONS, steps, width, height);
   }
+}
 
+export class King extends Piece {
+  constructor(x: number, y: number, hunter: boolean) {
+    super(x, y, hunter, 5, FaChessKing);
+  }
+
+  moveTowards(tx: number, ty: number, _width: number, _height: number): void {
+    const dx = tx - this.x;
+    const dy = ty - this.y;
+    if (Math.abs(dx) > Math.abs(dy)) {
+      if (dx > 0) {
+        this.x++;
+      } else {
+        this.x--;
+      }
+    } else {
+      if (dy > 0) {
+        this.y++;
+      } else {
+        this.y--;
+      }
+    }
+  }
+
+  moveRandomLegal(steps: number, width: number, height: number): void {
+    stepRandom(this, ROOK_DIRECTIONS, steps, width, height);
+  }
 }

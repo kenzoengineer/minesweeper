@@ -1,4 +1,4 @@
-import { Bishop, Knight, Piece, Rook } from "./game";
+import { Bishop, King, Knight, Piece, Rook } from "./game";
 
 export class Chaser {
   hunters: Piece[];
@@ -14,8 +14,16 @@ export class Chaser {
 
     this.tick = 0;
 
-    this.hunters = [new Knight(0, 0, true), new Rook(5, 5, true)];
-    this.victims = [new Bishop(5, 5, false),new Bishop(5, 5, false)];
+    this.hunters = [
+      new Knight(0, 0, true),
+      new Knight(5, 5, true),
+      new Rook(10, 5, true),
+    ];
+    this.victims = [
+      new Bishop(5, 5, false),
+      new Bishop(5, 10, false),
+      new Bishop(6, 7, false),
+    ];
   }
 
   // TODO: prevent pieces from moving into each other
