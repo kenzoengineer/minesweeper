@@ -1,165 +1,104 @@
-import { useState } from "react";
+import { CELL_SIZE, useDimensions } from "./DimensionsContext";
 import Chess from "./chess/Chess";
 
-const Career = () => {
-  const [open, setOpen] = useState(false);
-  return (
-    <div className="w-screen flex relative">
-      <Chess />
-      <div
-        className={`bg-[#1e262e] bg-opacity-85 text-white absolute
-        left-1/2 translate-x-[-50%] top-1/2 transition-all
-        translate-y-[-50%] flex flex-col items-center px-10 py-5 w-max min-h-64`}
-      >
-        <div className="flex max-lg:flex-col">
-          <div className="flex flex-col items-center">
-            <Experience
-              svg="svgs/sentry.svg"
-              company="Sentry"
-              position="Software Engineer"
-              location="San Francisco"
-              time="Aug '25 - Present"
-              current
-            />
-            <Experience
-              svg="svgs/sentry.svg"
-              company="Sentry"
-              position="Software Engineer (Intern)"
-              location="San Francisco"
-              time="Sep '24 - Dec '24"
-            />
-            <Experience
-              svg="svgs/vontive.svg"
-              company="Vontive"
-              position="Software Engineer (Intern)"
-              location="San Francisco"
-              time="Jan '24 - Apr '24"
-            />
-            <div
-              className={`grid transition-all duration-500 ease-in-out ${open ? "grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0"}`}
-            >
-              <div className="overflow-hidden">
-              <Experience
-                svg="svgs/senstar.svg"
-                company="Senstar"
-                position="Software Developer (Intern)"
-                location="Waterloo"
-                time="Jan '23 - Apr '23"
-              />
-              <Experience
-                svg="svgs/shoplogix.svg"
-                company="Shoplogix"
-                position="Software Developer (Intern)"
-                location="Oakville"
-                time="May '22 - Aug '22"
-              />
-              <Experience
-                svg="svgs/qbuild.svg"
-                company="QBuild"
-                position="Application Developer (Intern)"
-                location="Markham"
-                time="Sep '21 - Dec '21"
-              />
-              </div>
-            </div>
-          </div>
-          <div className="lg:w-1 max-lg:h-1 bg-white lg:mx-8 max-lg:my-8" />
-          <div className="flex flex-col max-lg:max-w-[60vw] justify-center">
-            <Section
-              title="Full Stack"
-              contents={[
-                "Javascript/Typescript",
-                "Python",
-                "React",
-                "C#",
-                "PostgreSQL",
-              ]}
-            />
-            <Section
-              title="Systems"
-              contents={[
-                "Rust",
-                "Java",
-                "C",
-                "Terraform",
-                "Docker",
-                "Kubernetes",
-                "GCP",
-              ]}
-            />
-            <Section
-              title="For Fun"
-              contents={[
-                "Photoshop",
-                "Premiere Pro",
-                "After Effects",
-                "Blender",
-                "FFXIV",
-              ]}
-            />
-          </div>
-        </div>
-        <button
-          className="w-fit opacity-80 max-lg:hidden"
-          onClick={() => {
-            setOpen(!open);
-          }}
-        >
-          {open ? "Less ⇑" : "More ⇓"}
-        </button>
-      </div>
-    </div>
-  );
-};
+interface Role {
+  title: string;
+  date: string;
+}
 
 interface ExperienceProps {
   company: string;
-  position: string;
   location: string;
-  time: string;
-  svg?: string;
-  current?: boolean;
+  roles: Role[];
+  featured?: boolean;
 }
-const Experience = ({
-  company,
-  position,
-  location,
-  time,
-  svg,
-  current,
-}: ExperienceProps) => {
+
+const SENTRY: ExperienceProps = {
+  company: "Sentry",
+  location: "San Francisco, CA",
+  roles: [
+    { title: "Software Engineer ll", date: "Aug 2026" },
+    { title: "Software Engineer l", date: "Aug 2025" },
+    { title: "Software Engineer Intern", date: "Sept 2024" },
+  ],
+};
+
+const PAST_EXPERIENCES: ExperienceProps[] = [
+  { company: "Vontive", location: "San Francisco, CA", roles: [{ title: "Software Engineer Intern", date: "Jan – Apr 2024" }] },
+  { company: "Senstar", location: "Waterloo, ON", roles: [{ title: "Software Developer Intern", date: "Jan – Apr 2023" }] },
+  { company: "Shoplogix", location: "Oakville, ON", roles: [{ title: "Software Developer Intern", date: "May – Aug 2022" }] },
+  { company: "QBuild", location: "Markham, ON", roles: [{ title: "Application Developer Intern", date: "Sept – Dec 2021" }] },
+];
+
+const CHESS_ROWS = Math.round(256 / CELL_SIZE);
+
+const Experience = ({ company, location, roles, featured }: ExperienceProps) => {
   return (
-    <div className="flex-col mb-4">
-      <div className="flex items-center gap-2">
-        {svg && (
-          <img
-            src={`${import.meta.env.BASE_URL}${svg}`}
-            alt={`${company} logo`}
-            className="h-6 w-6 object-contain"
-          />
-        )}
-        <h1 className="text-xl">{company}</h1>
+    <div className={`bg-[#101010] text-white flex ${featured ? "p-10 min-h-64" : "flex-col p-10"}`}>
+      <div>
+        <h3 className={`font-bbh-hegarty uppercase ${featured ? "text-7xl" : "text-xl"}`}>{company}</h3>
+        <p className={featured ? "text-xl" : "text-xs text-neutral-500"}>{location}</p>
+        <div className={`w-full my-2 ${featured ? "h-1 bg-red-500" : "h-0.5 bg-neutral-700"}`} />
       </div>
-      <p className="text-sm">{position}</p>
-      <p className={`text-xs ${current ? "opacity-80" : "opacity-40"}`}>
-        {location} · ({time})
-      </p>
+      {featured ? (
+        <Timeline roles={roles} />
+      ) : (
+        roles.map((role) => (
+          <div key={role.date} className="flex flex-col flex-1">
+            <p className="text-sm text-neutral-400">{role.title}</p>
+            <p className="text-xs uppercase tracking-widest text-neutral-500 mt-auto pt-1">{role.date}</p>
+          </div>
+        ))
+      )}
     </div>
   );
 };
 
-interface SectionProps {
-  title: string;
-  contents: string[];
-}
-
-const Section = ({ title, contents }: SectionProps) => {
+const Timeline = ({ roles }: { roles: Role[] }) => {
   return (
-    <div className="mb-4">
-      <h1 className="text-xl">{title}</h1>
-      <p className="text-sm opacity-80">{contents.join(" · ")}</p>
-    </div>
+    <ol className="w-1/2 ml-auto mr-6 self-center flex flex-row-reverse">
+      {roles.map((role, i) => (
+        <li key={role.date} className="flex-1 flex flex-col items-center text-center">
+          <p className="text-xs uppercase tracking-widest text-neutral-500">{role.date}</p>
+          <div className="relative w-full h-2.5 my-3">
+            {i < roles.length - 1 && (
+              <div className="absolute left-0 right-1/2 top-1/2 h-px bg-neutral-700" />
+            )}
+            {i > 0 && <div className="absolute left-1/2 right-0 top-1/2 h-px bg-neutral-700" />}
+            <div
+              className={`absolute left-1/2 top-0 -translate-x-1/2 w-2.5 h-2.5 ${
+                i === 0 ? "bg-red-500" : "bg-neutral-500"
+              }`}
+            />
+          </div>
+          <p className={`text-sm ${i === 0 ? "text-white" : "text-neutral-400"}`}>{role.title}</p>
+        </li>
+      ))}
+    </ol>
   );
 };
 
+const Career = () => {
+  const { windowWidth } = useDimensions();
+  // p-10 on each side eats 2 cells of width
+  const chessCols = Math.round(windowWidth / CELL_SIZE) - 2;
+  return (
+    <div className="bg-[#1f1f1f]">
+      <div className="flex flex-col gap-2 p-10">
+        <Experience {...SENTRY} featured />
+        <div className="grid grid-cols-4 gap-2">
+          {PAST_EXPERIENCES.map((exp) => (
+            <Experience key={exp.company} {...exp} />
+          ))}
+        </div>
+        <div
+          className="bg-[#101010] self-center"
+          style={{ width: chessCols * CELL_SIZE, height: CHESS_ROWS * CELL_SIZE }}
+        >
+          <Chess width={chessCols} height={CHESS_ROWS} />
+        </div>
+      </div>
+    </div>
+  );
+};
 export default Career;

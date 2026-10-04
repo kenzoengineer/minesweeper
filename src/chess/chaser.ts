@@ -15,14 +15,14 @@ export class Chaser {
     this.tick = 0;
 
     this.hunters = [
-      new Knight(0, 0, true),
-      new Knight(5, 5, true),
-      new Rook(10, 5, true),
+      new Knight(0, 1, true),
+      new Knight(5, 1, true),
+      new Rook(10, 1, true),
     ];
     this.victims = [
-      new Bishop(5, 5, false),
-      new Bishop(5, 10, false),
-      new Bishop(6, 7, false),
+      new Bishop(5, 1, false),
+      new Bishop(10, 2, false),
+      new Bishop(15, 3, false),
     ];
   }
 
@@ -39,7 +39,7 @@ export class Chaser {
 
       // caught! respawn the victim somewhere else on the board
       if (hunter.x == victim.x && hunter.y == victim.y) {
-        victim.moveRandomLegal(5, this.width, this.height);
+        victim.moveRandomLegal(3, this.width, this.height);
       }
     }
     return [...this.hunters, ...this.victims];

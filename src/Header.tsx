@@ -2,41 +2,16 @@ import { Minesweeper } from "./minesweeper/Minesweeper";
 
 const Header = () => {
   return (
-    <div className="w-screen flex flex-col bg-[#1e262e]">
+    <div className="w-screen flex flex-col bg-[#1f1f1f]">
       <Minesweeper />
       <div
-        className="bg-[#1e262e] bg-opacity-85 text-white absolute
-        left-1/2 translate-x-[-50%] top-1/2
-        translate-y-[-50%] flex flex-col px-10 py-5"
+        className=" text-white absolute
+        left-0 bottom-0 flex flex-col px-10 py-5"
       >
-        <h1 className="text-4xl font-bold mb-4">Ken Jiang - 江华栋</h1>
-        <pre className="mb-4">
-          <p>Software Engineering @ Sentry</p>
-          <p>Computer Engineering Alum @ UWaterloo</p>
-        </pre>
-        <div className="flex gap-4">
-          <HeaderLink text="GitHub" link="https://github.com/kenzoengineer" />
-          <HeaderLink
-            text="LinkedIn"
-            link="https://www.linkedin.com/in/ken-jiang"
-          />
-          <HeaderLink text="Email" link="mailto:kenzoengineer@gmail.com" />
-        </div>
+        <h1 className="font-bbh-hegarty text-9xl">KEN <br/> JIANG</h1>
+        <h2>SWE @ Sentry · UWaterloo Alum · Resume</h2>
       </div>
     </div>
-  );
-};
-
-const HeaderLink = ({ text, link }: { text: string; link: string }) => {
-  return (
-    <a
-      href={link}
-      target="_blank"
-      rel="noopener noreferrer"
-      className="text-[#6b9ceb] underline"
-    >
-      {text}
-    </a>
   );
 };
 

@@ -1,7 +1,7 @@
 import { CellData, MinesweeperBoard } from "./game";
 
 const COLORS: Record<string, string> = {
-  "0": "bg-[#384048]",
+  "0": "bg-[#101010]",
   "1": "bg-[#7cc7ff]",
   "2": "bg-[#66c266]",
   "3": "bg-[#ff7788]",
@@ -18,18 +18,18 @@ const Cell = ({ value }: { value: CellData }) => {
     <div
       className={`w-10 h-10 shrink-0 flex items-center justify-center ${
         value.revealed
-          ? "border-[#1e262e] border-[1px] bg-[#384048]"
-          : "border-t-[#707880] border-l-[#707880] border-r-[#222a32] border-b-[#222a32] border-4 bg-[#4c545c]"
+          ? "bg-[#101010]"
+          : "bg-[#1f1f1f]"
       }`}
     >
       {value.flagged ? (
-      <div className="w-1/2 h-1/2 opacity-50 bg-[#f65454]"/>
+      <div className="w-1/3 h-1/3 rotate-45 bg-[#ff4040]"/>
         // <div className="rounded-full text-[#f65454] ">▶&#xFE0E;</div>
       ) : !value.revealed ? (
         <div />
       ) : (
         <div
-          className={`w-3 h-3 rounded-full opacity-50 ${COLORS[value.value]}`}
+          className={`w-3 h-3 opacity-50 ${COLORS[value.value]}`}
         />
       )}
     </div>

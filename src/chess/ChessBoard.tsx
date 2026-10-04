@@ -10,7 +10,7 @@ interface ChessBoardProps {
 
 const ChessBoard = ({ width, height, pieces }: ChessBoardProps) => {
   return (
-    <div className="flex flex-col flex-1 items-center w-full max-h-full overflow-auto">
+    <div className="flex flex-1 items-center justify-center w-full h-full overflow-hidden">
       <div
         className="relative shrink-0"
         style={{ width: width * CELL_SIZE, height: height * CELL_SIZE }}
@@ -32,7 +32,7 @@ const Grid = memo(({ width, height }: { width: number; height: number }) => {
           {Array.from({ length: width }, (_, x) => (
             <div
               key={`cell-${x}-${y}`}
-              className={`${x % 2 === y % 2 ? "bg-[#384048]" : "bg-[#4c545c]"} w-10 h-10 shrink-0`}
+              className={`${x % 2 === y % 2 ? "bg-[#101010]" : "bg-[#1f1f1f]"} w-10 h-10 shrink-0`}
             />
           ))}
         </div>
@@ -51,7 +51,7 @@ const Marker = ({ piece }: { piece: Piece }) => {
       }}
     >
       <div
-        className={`w-4 h-4 ${piece.hunter ? "text-white z-10" : "text-black z-0"}`}
+        className={`w-4 h-4 ${piece.hunter ? "text-green-500 z-10" : "text-blue-500 z-0"}`}
       >
         {piece.icon && <piece.icon className="w-full h-full scale-125" />}
       </div>

@@ -6,9 +6,9 @@ import { useDebounced } from "./hooks/useDebounced";
 export const CELL_SIZE = 40;
 
 // board dimensions in cells, derived from the window and shared by every board
-type Dimensions = { width: number; height: number };
+type Dimensions = { width: number; height: number; windowWidth: number };
 
-const DimensionsContext = createContext<Dimensions>({ width: 0, height: 0 });
+const DimensionsContext = createContext<Dimensions>({ width: 0, height: 0, windowWidth: 0 });
 
 export const DimensionsProvider = ({ children }: { children: ReactNode }) => {
   const size = useWindowSize();
@@ -17,7 +17,7 @@ export const DimensionsProvider = ({ children }: { children: ReactNode }) => {
   const height = Math.floor(debounced.height / CELL_SIZE);
 
   return (
-    <DimensionsContext.Provider value={{ width, height }}>
+    <DimensionsContext.Provider value={{ width, height, windowWidth: debounced.width }}>
       {children}
     </DimensionsContext.Provider>
   );
