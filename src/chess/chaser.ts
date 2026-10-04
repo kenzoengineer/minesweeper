@@ -1,4 +1,4 @@
-import { Bishop, Knight, Piece, Rook } from "./game";
+import { Bishop, King, Knight, Piece, Rook } from "./game";
 
 export class Chaser {
   hunters: Piece[];
@@ -16,7 +16,7 @@ export class Chaser {
 
     this.hunters = [
       new Knight(0, 1, true),
-      new Knight(5, 1, true),
+      new King(5, 1, true),
       new Rook(10, 1, true),
     ];
     this.victims = [
@@ -37,7 +37,7 @@ export class Chaser {
         continue;
       }
       const [hx, hy] = [hunter.x, hunter.y];
-      hunter.moveTowards(victim.x, victim.y, this.width, this.height);
+      hunter.moveTowards(victim, pieces, this.victims, this.width, this.height);
 
       // caught! respawn the victim on a free square, shortening the hop if boxed in
       if (hunter.x == victim.x && hunter.y == victim.y) {
@@ -49,12 +49,11 @@ export class Chaser {
           victim.x = hunter.x;
           victim.y = hunter.y;
         }
-      }
-
-      // only one piece per square; if the hunter is sharing one, it doesn't move this turn
-      if (pieces.some((p) => p !== hunter && p.x === hunter.x && p.y === hunter.y)) {
-        hunter.x = hx;
-        hunter.y = hy;
+        // nowhere for the victim to go, so the capture doesn't happen this turn
+        if (hunter.x == victim.x && hunter.y == victim.y) {
+          hunter.x = hx;
+          hunter.y = hy;
+        }
       }
     }
     return pieces;

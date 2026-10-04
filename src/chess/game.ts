@@ -19,13 +19,32 @@ export abstract class Piece {
     public speed: number,
     public icon: IconType,
   ) {}
-  abstract moveTowards(
-    tx: number,
-    ty: number,
-    width: number,
-    height: number,
-  ): void;
+  // squares this piece can move to, ignoring other pieces. enemies is the
+  // opposing side, for pieces that care about check
+  abstract legalMoves(width: number, height: number, enemies: Piece[]): coord[];
   abstract moveRandomLegal(steps: number, width: number, height: number): void;
+  // whether this piece attacks (x, y), ignoring anything in the way
+  abstract attacks(x: number, y: number): boolean;
+
+  // how far (x, y) is from the target; straight-line by default
+  distance(x: number, y: number, tx: number, ty: number): number {
+    return (tx - x) ** 2 + (ty - y) ** 2;
+  }
+
+  // take the legal move closest to the target, skipping squares other pieces are on
+  moveTowards(target: Piece, pieces: Piece[], enemies: Piece[], width: number, height: number): void {
+    const moves = this.legalMoves(width, height, enemies).sort(
+      (a, b) =>
+        this.distance(a.x, a.y, target.x, target.y) - this.distance(b.x, b.y, target.x, target.y),
+    );
+    const move = moves.find(
+      ({ x, y }) => !pieces.some((p) => p !== target && p.x === x && p.y === y),
+    );
+    if (move) {
+      this.x = move.x;
+      this.y = move.y;
+    }
+  }
 }
 
 const ROOK_DIRECTIONS = [
@@ -40,6 +59,7 @@ const BISHOP_DIRECTIONS = [
   [1, -1],
   [-1, 1],
 ];
+const KING_DIRECTIONS = [...ROOK_DIRECTIONS, ...BISHOP_DIRECTIONS];
 
 // check every direction, starting randomly, and only accept if it moved
 const stepRandom = (
@@ -67,18 +87,23 @@ export class Rook extends Piece {
     super(x, y, hunter, 5, FaChessRook);
   }
 
-  moveTowards(tx: number, ty: number, _width: number, _height: number): void {
-    const dx = Math.abs(tx - this.x);
-    const dy = Math.abs(ty - this.y);
-    if (dx > dy) {
-      this.x = tx;
-    } else {
-      this.y = ty;
+  legalMoves(width: number, height: number): coord[] {
+    const moves: coord[] = [];
+    for (let x = 0; x < width; x++) {
+      if (x !== this.x) moves.push({ x, y: this.y });
     }
+    for (let y = 0; y < height; y++) {
+      if (y !== this.y) moves.push({ x: this.x, y });
+    }
+    return moves;
   }
 
   moveRandomLegal(steps: number, width: number, height: number): void {
     stepRandom(this, ROOK_DIRECTIONS, steps, width, height);
+  }
+
+  attacks(x: number, y: number): boolean {
+    return (x === this.x) !== (y === this.y);
   }
 }
 
@@ -86,14 +111,31 @@ export class Knight extends Piece {
   constructor(x: number, y: number, hunter: boolean) {
     super(x, y, hunter, 1, FaChessKnight);
   }
-  moveTowards(tx: number, ty: number, width: number, height: number): void {
-    const { x, y } = bfs(this.x, this.y, tx, ty, width, height);
-    this.x = x;
-    this.y = y;
+  legalMoves(width: number, height: number): coord[] {
+    return MOVE_ARRAY.map(([dx, dy]) => ({ x: this.x + dx, y: this.y + dy })).filter(
+      ({ x, y }) => x >= 0 && y >= 0 && x < width && y < height,
+    );
+  }
+
+  // knight moves between two squares on an open board
+  distance(x: number, y: number, tx: number, ty: number): number {
+    let dx = Math.abs(tx - x);
+    let dy = Math.abs(ty - y);
+    if (dx < dy) [dx, dy] = [dy, dx];
+    if (dx === 1 && dy === 0) return 3;
+    if (dx === 2 && dy === 2) return 4;
+    const delta = dx - dy;
+    return dy > delta
+      ? delta - 2 * Math.floor((delta - dy) / 3)
+      : delta - 2 * Math.floor((delta - dy) / 4);
   }
 
   // TODO
   moveRandomLegal(_steps: number, _width: number, _height: number): void {}
+
+  attacks(x: number, y: number): boolean {
+    return Math.abs((x - this.x) * (y - this.y)) === 2;
+  }
 }
 
 const MOVE_ARRAY = [
@@ -107,75 +149,28 @@ const MOVE_ARRAY = [
   [2, 1],
 ];
 
-// the first step of a shortest knight path from (x, y) to (tx, ty), bounded to
-// the [0, width) x [0, height) board. Returns the start square if already there
-// or if the target is unreachable.
-export const bfs = (
-  x: number,
-  y: number,
-  tx: number,
-  ty: number,
-  width: number,
-  height: number,
-): coord => {
-  if (x === tx && y === ty) {
-    return { x, y };
-  }
-
-  const start = `${x}.${y}`;
-  const queue = [[x, y]];
-  const parent = new Map<string, string>();
-  const visited = new Set<string>([start]);
-
-  while (queue.length > 0) {
-    const [cx, cy] = queue.shift()!;
-    for (const [dx, dy] of MOVE_ARRAY) {
-      const nx = cx + dx;
-      const ny = cy + dy;
-      // stay on the board in every direction
-      if (nx < 0 || ny < 0 || nx >= width || ny >= height) {
-        continue;
-      }
-      const nk = `${nx}.${ny}`;
-      if (visited.has(nk)) {
-        continue;
-      }
-      visited.add(nk);
-      parent.set(nk, `${cx}.${cy}`);
-
-      if (nx === tx && ny === ty) {
-        // walk back from the target to the first step out of the start square
-        let curr = nk;
-        while (parent.get(curr) !== start) {
-          curr = parent.get(curr)!;
-        }
-        const [rx, ry] = curr.split(".").map((n) => parseInt(n));
-        return { x: rx, y: ry };
-      }
-
-      queue.push([nx, ny]);
-    }
-  }
-
-  // unreachable
-  return { x, y };
-};
-
 export class Bishop extends Piece {
   constructor(x: number, y: number, hunter: boolean) {
     super(x, y, hunter, 1, FaChessBishop);
   }
 
-  // TODO (non-trivial)
-  moveTowards(
-    _tx: number,
-    _ty: number,
-    _width: number,
-    _height: number,
-  ): void {}
+  legalMoves(width: number, height: number): coord[] {
+    const moves: coord[] = [];
+    for (const [dx, dy] of BISHOP_DIRECTIONS) {
+      for (let x = this.x + dx, y = this.y + dy; x >= 0 && y >= 0 && x < width && y < height; x += dx, y += dy) {
+        moves.push({ x, y });
+      }
+    }
+    return moves;
+  }
 
   moveRandomLegal(steps: number, width: number, height: number): void {
     stepRandom(this, BISHOP_DIRECTIONS, steps, width, height);
+  }
+
+  attacks(x: number, y: number): boolean {
+    const dx = Math.abs(x - this.x);
+    return dx > 0 && dx === Math.abs(y - this.y);
   }
 }
 
@@ -184,25 +179,19 @@ export class King extends Piece {
     super(x, y, hunter, 5, FaChessKing);
   }
 
-  moveTowards(tx: number, ty: number, _width: number, _height: number): void {
-    const dx = tx - this.x;
-    const dy = ty - this.y;
-    if (Math.abs(dx) > Math.abs(dy)) {
-      if (dx > 0) {
-        this.x++;
-      } else {
-        this.x--;
-      }
-    } else {
-      if (dy > 0) {
-        this.y++;
-      } else {
-        this.y--;
-      }
-    }
+  // neighbouring squares that aren't in check
+  legalMoves(width: number, height: number, enemies: Piece[]): coord[] {
+    return KING_DIRECTIONS.map(([dx, dy]) => ({ x: this.x + dx, y: this.y + dy })).filter(
+      ({ x, y }) =>
+        x >= 0 && y >= 0 && x < width && y < height && !enemies.some((e) => e.attacks(x, y)),
+    );
   }
 
   moveRandomLegal(steps: number, width: number, height: number): void {
-    stepRandom(this, ROOK_DIRECTIONS, steps, width, height);
+    stepRandom(this, KING_DIRECTIONS, steps, width, height);
+  }
+
+  attacks(x: number, y: number): boolean {
+    return Math.max(Math.abs(x - this.x), Math.abs(y - this.y)) === 1;
   }
 }
