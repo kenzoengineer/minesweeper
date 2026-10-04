@@ -176,7 +176,7 @@ export class Bishop extends Piece {
 
 export class King extends Piece {
   constructor(x: number, y: number, hunter: boolean) {
-    super(x, y, hunter, 5, FaChessKing);
+    super(x, y, hunter, 2, FaChessKing);
   }
 
   // neighbouring squares that aren't in check

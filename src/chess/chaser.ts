@@ -37,7 +37,7 @@ export class Chaser {
         continue;
       }
       const [hx, hy] = [hunter.x, hunter.y];
-      hunter.moveTowards(victim, pieces, this.victims, this.width, this.height);
+      hunter.moveTowards(victim, pieces, [victim], this.width, this.height);
 
       // caught! respawn the victim on a free square, shortening the hop if boxed in
       if (hunter.x == victim.x && hunter.y == victim.y) {
