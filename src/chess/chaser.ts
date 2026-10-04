@@ -20,28 +20,43 @@ export class Chaser {
       new Rook(10, 1, true),
     ];
     this.victims = [
-      new Bishop(5, 1, false),
+      new Bishop(3, 3, false),
       new Bishop(10, 2, false),
       new Bishop(15, 3, false),
     ];
   }
 
-  // TODO: prevent pieces from moving into each other
   step(): Piece[] {
     this.tick++;
+    const pieces = [...this.hunters, ...this.victims];
+
     for (let i = 0; i < this.hunters.length; i++) {
       const hunter = this.hunters[i];
       const victim = this.victims[i];
       if (this.tick % hunter.speed != 0) {
         continue;
       }
+      const [hx, hy] = [hunter.x, hunter.y];
       hunter.moveTowards(victim.x, victim.y, this.width, this.height);
 
-      // caught! respawn the victim somewhere else on the board
+      // caught! respawn the victim on a free square, shortening the hop if boxed in
       if (hunter.x == victim.x && hunter.y == victim.y) {
-        victim.moveRandomLegal(3, this.width, this.height);
+        for (let steps = 3; steps > 0; steps--) {
+          victim.moveRandomLegal(steps, this.width, this.height);
+          if (!pieces.some((p) => p !== victim && p.x === victim.x && p.y === victim.y)) {
+            break;
+          }
+          victim.x = hunter.x;
+          victim.y = hunter.y;
+        }
+      }
+
+      // only one piece per square; if the hunter is sharing one, it doesn't move this turn
+      if (pieces.some((p) => p !== hunter && p.x === hunter.x && p.y === hunter.y)) {
+        hunter.x = hx;
+        hunter.y = hy;
       }
     }
-    return [...this.hunters, ...this.victims];
+    return pieces;
   }
 }
