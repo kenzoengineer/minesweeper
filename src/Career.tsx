@@ -34,9 +34,9 @@ const CHESS_ROWS = Math.round(256 / CELL_SIZE);
 
 const Experience = ({ company, location, roles, featured }: ExperienceProps) => {
   return (
-    <div className={`bg-[#101010] text-white flex ${featured ? "p-10 min-h-64" : "flex-col p-10"}`}>
+    <div className={`bg-[#101010] text-white flex flex-col p-5 md:p-10 ${featured ? "md:flex-row min-h-64" : ""}`}>
       <div>
-        <h3 className={`font-bbh-hegarty uppercase ${featured ? "text-7xl" : "text-xl"}`}>{company}</h3>
+        <h3 className={`font-bbh-hegarty uppercase ${featured ? "text-5xl sm:text-7xl" : "text-xl"}`}>{company}</h3>
         <p className={featured ? "text-xl" : "text-xs text-neutral-500"}>{location}</p>
         <div className={`w-full my-2 ${featured ? "h-1 bg-red-500" : "h-0.5 bg-neutral-700"}`} />
       </div>
@@ -56,7 +56,7 @@ const Experience = ({ company, location, roles, featured }: ExperienceProps) => 
 
 const Timeline = ({ roles }: { roles: Role[] }) => {
   return (
-    <ol className="w-1/2 ml-auto mr-6 self-center flex flex-row-reverse">
+    <ol className="w-full mt-8 md:w-1/2 md:mt-0 md:ml-auto md:mr-6 self-center flex flex-row-reverse">
       {roles.map((role, i) => (
         <li key={role.date} className="flex-1 flex flex-col items-center text-center">
           <p className="text-xs uppercase tracking-widest text-neutral-500">{role.date}</p>
@@ -80,13 +80,14 @@ const Timeline = ({ roles }: { roles: Role[] }) => {
 
 const Career = () => {
   const { windowWidth } = useDimensions();
-  // p-10 on each side eats 2 cells of width
-  const chessCols = Math.round(windowWidth / CELL_SIZE) - 2;
+  // matches the p-5 md:p-10 padding on the wrapper below
+  const padding = windowWidth >= 768 ? 40 : 20;
+  const chessCols = Math.round((windowWidth - 2 * padding) / CELL_SIZE);
   return (
     <div className="bg-[#1f1f1f]">
-      <div className="flex flex-col gap-2 p-10">
+      <div className="flex flex-col gap-2 p-5 md:p-10">
         <Experience {...SENTRY} featured />
-        <div className="grid grid-cols-4 gap-2">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2">
           {PAST_EXPERIENCES.map((exp) => (
             <Experience key={exp.company} {...exp} />
           ))}
