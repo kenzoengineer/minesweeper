@@ -26,6 +26,9 @@ const Tetrominos: Record<string, Tetromino> = {
 export const emptyBoard = (width: number, height: number): BoardState =>
   Array.from({ length: height }, () => Array<Square>(width).fill(Square.empty));
 
+// the piece can turn and slide every step, but only falls one row every this many steps
+const GRAVITY_EVERY = 3;
+
 export class Tetris {
   // placed squares only; the active piece is drawn on top in step()
   board: BoardState;
@@ -33,6 +36,7 @@ export class Tetris {
   // where the active piece is heading, picked once when it spawns
   private targetX = 0;
   private rotationsLeft = 0;
+  private tick = 0;
 
   private width: number;
 
@@ -52,6 +56,7 @@ export class Tetris {
   }
 
   step(): BoardState {
+    this.tick++;
     if (!this.active) {
       this.spawn();
     }
@@ -84,7 +89,11 @@ export class Tetris {
         this.active.x = shift.x;
       }
 
-      // gravity
+      // gravity; once the piece is lined up with its target it fast drops every step
+      const lined = this.rotationsLeft === 0 && this.active.x === this.targetX;
+      if (!lined && this.tick % GRAVITY_EVERY !== 0) {
+        return state;
+      }
       if (canFall(this.board, this.active)) {
         this.active.y++;
       } else {

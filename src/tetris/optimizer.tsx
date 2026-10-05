@@ -67,12 +67,13 @@ const countCompleted = (board: BoardState): number => {
   return accum;
 };
 
+// weights from a simulation sweep on 10x15 with the in-game steering
 export const scoreBoard = (board: BoardState): number => {
   return (
-    countHoles(board) +
-    countBumpiness(board) +
-    countHeight(board) -
-    countCompleted(board) * 3 // weigh this more
+    countHoles(board)     * 8 +
+    countBumpiness(board) * 2 +
+    countHeight(board)    * 2.5 -
+    countCompleted(board) * 6.5
   );
 }
 
