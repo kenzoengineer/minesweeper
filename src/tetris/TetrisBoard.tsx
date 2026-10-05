@@ -29,7 +29,7 @@ const Grid = memo(({ width, height, state }: { width: number; height: number, st
           {Array.from({ length: width }, (_, x) => (
             <div
               key={`cell-${x}-${y}`}
-              className={`${state[y][x] == 0 ? (x % 2 === y % 2 ? "bg-[#101010]" : "bg-[#1f1f1f]") : "bg-white"} w-10 h-10 shrink-0`}
+              className={`${state[y][x] == 0 ? "bg-[#101010]" : "bg-white"} w-10 h-10 shrink-0`}
             />
           ))}
         </div>

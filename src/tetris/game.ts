@@ -37,6 +37,8 @@ export class Tetris {
   private targetX = 0;
   private rotationsLeft = 0;
   private tick = 0;
+  // one of each tetromino in random order; spawn() pops from it and refills when empty
+  private bag: Tetromino[] = [];
 
   private width: number;
 
@@ -45,10 +47,17 @@ export class Tetris {
     this.board = emptyBoard(width, height);
   }
 
-  // drop a random tetromino in at the top, centred, and pick where it should land
+  // drop the next tetromino from the bag in at the top, centred, and pick where it should land
   private spawn() {
-    const shapes = Object.values(Tetrominos);
-    const shape = shapes[Math.floor(Math.random() * shapes.length)];
+    if (this.bag.length === 0) {
+      this.bag = Object.values(Tetrominos);
+      // fisher-yates
+      for (let i = this.bag.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [this.bag[i], this.bag[j]] = [this.bag[j], this.bag[i]];
+      }
+    }
+    const shape = this.bag.pop()!;
     this.active = { shape, x: Math.floor((this.width - shape[0].length) / 2), y: 0 };
     const target = generateMove(this.board, this.active);
     this.targetX = target?.move.x ?? this.active.x;
