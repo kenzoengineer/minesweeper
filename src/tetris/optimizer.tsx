@@ -1,4 +1,4 @@
-import { ActiveContainer, BoardState, Square } from "./game";
+import { ActiveContainer, BoardState, Square, Tetromino } from "./game";
 
 /**
  * helper function to count the y position of the highest tile
@@ -77,7 +77,7 @@ export const scoreBoard = (board: BoardState): number => {
 }
 
 // true if every filled square of the piece is on the board and not on a placed square
-const fits = (board: BoardState, active: ActiveContainer): boolean => {
+export const fits = (board: BoardState, active: ActiveContainer): boolean => {
   const { shape, x, y } = active;
   for (let dy = 0; dy < shape.length; dy++) {
     for (let dx = 0; dx < shape[dy].length; dx++) {
@@ -111,25 +111,44 @@ export const place = (board: BoardState, active: ActiveContainer): BoardState =>
   return next;
 };
 
-/**
- * Generates the best position: drop the piece straight down in every column it
- * fits in and keep the landing spot with the lowest score. null if it fits nowhere
- */
-export const generateMove = (board: BoardState, active: ActiveContainer): ActiveContainer | null => {
-  let best: { move: ActiveContainer; score: number } | null = null;
-  // start left of the board so shapes with empty leading columns can reach x = 0
-  for (let x = 1 - active.shape[0].length; x < board[0].length; x++) {
-    const move = { ...active, x };
-    if (!fits(board, move)) {
-      continue;
-    }
-    while (canFall(board, move)) {
-      move.y++;
-    }
-    const score = scoreBoard(place(board, move));
-    if (!best || score < best.score) {
-      best = { move, score };
+export const rotateClockwise = (shape: Tetromino): Tetromino => {
+  const rows = shape.length;
+  const cols = shape[0].length;
+  const rotated = Array.from({ length: cols }, () => Array<Square>(rows));
+  for (let r = 0; r < rows; r++) {
+    for (let c = 0; c < cols; c++) {
+      rotated[c][rows - 1 - r] = shape[r][c];
     }
   }
-  return best?.move ?? null;
+  return rotated;
+};
+
+/**
+ * Generates the best position: for each of the 4 rotations, drop the piece straight
+ * down in every column it fits in and keep the landing spot with the lowest score.
+ * rotations is how many clockwise turns from the given shape. null if it fits nowhere
+ */
+export const generateMove = (
+  board: BoardState,
+  active: ActiveContainer,
+): { move: ActiveContainer; rotations: number } | null => {
+  let best: { move: ActiveContainer; rotations: number; score: number } | null = null;
+  let shape = active.shape;
+  for (let rotations = 0; rotations < 4; rotations++, shape = rotateClockwise(shape)) {
+    // start left of the board so shapes with empty leading columns can reach x = 0
+    for (let x = 1 - shape[0].length; x < board[0].length; x++) {
+      const move = { ...active, shape, x };
+      if (!fits(board, move)) {
+        continue;
+      }
+      while (canFall(board, move)) {
+        move.y++;
+      }
+      const score = scoreBoard(place(board, move));
+      if (!best || score < best.score) {
+        best = { move, rotations, score };
+      }
+    }
+  }
+  return best && { move: best.move, rotations: best.rotations };
 };

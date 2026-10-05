@@ -6,7 +6,7 @@ import { sleep } from "../utils";
 const WIDTH = 10;
 const HEIGHT = 15;
 // ms between game steps
-const STEP_DELAY = 500;
+const STEP_DELAY = 100;
 
 const Tetris = () => {
   const [boardState, setBoardState] = useState<BoardState>(() => emptyBoard(WIDTH, HEIGHT));
