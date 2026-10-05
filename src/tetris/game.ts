@@ -67,6 +67,10 @@ export class Tetris {
     }
     const { shape, color } = this.bag.pop()!;
     this.active = { shape, color, x: Math.floor((this.width - shape[0].length) / 2), y: 0 };
+    // spawned into the stack: game over, start a fresh board
+    if (!fits(this.board, this.active)) {
+      this.board = emptyBoard(this.width, this.board.length);
+    }
     const target = generateMove(this.board, this.active);
     this.targetX = target?.move.x ?? this.active.x;
     this.rotationsLeft = target?.rotations ?? 0;
@@ -118,6 +122,10 @@ export class Tetris {
         // drop full rows and pad the top with empty ones
         const kept = this.board.filter((row) => row.some((square) => square.state === SquareState.empty));
         this.board = [...emptyBoard(this.width, this.board.length - kept.length), ...kept];
+        // the stack reached the top row: game over, start a fresh board
+        if (this.board[0].some((square) => square.state !== SquareState.empty)) {
+          this.board = emptyBoard(this.width, this.board.length);
+        }
         this.active = null;
         return state;
       }
