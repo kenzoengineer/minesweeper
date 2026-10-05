@@ -1,30 +1,38 @@
 import { canFall, fits, generateMove, place, rotateClockwise } from "./optimizer";
 
-export enum Square {
+export enum SquareState {
   empty = 0,
   placed = 1,
   active = 2,
 }
 
+// color indexes into the palette in TetrisBoard
+export type Square = { state: SquareState; color: number };
+
 export type BoardState = Square[][];
 
-export type Tetromino = Square[][];
+// 1 where the piece has a square
+export type Tetromino = number[][];
 
-export type ActiveContainer = { shape: Tetromino; x: number; y: number };
+export type ActiveContainer = { shape: Tetromino; color: number; x: number; y: number };
 
-const Tetrominos: Record<string, Tetromino> = {
-  o: [[2,2],[2,2]],
-  i: [[0,0,0,0],[2,2,2,2],[0,0,0,0],[0,0,0,0]],
-  t: [[0, 2, 0], [2, 2, 2],[0,0,0]],
-  s: [[0, 2, 2], [2, 2, 0],[0,0,0]],
-  z: [[2, 2, 0], [0, 2, 2],[0,0,0]],
-  j: [[2,0,0], [2, 2,2], [0,0,0]],
-  l: [[0, 0,2], [2, 2,2], [0,0,0]],
+type Piece = { shape: Tetromino; color: number };
+
+const Tetrominos: Record<string, Piece> = {
+  o: { shape: [[1,1],[1,1]], color: 6 },
+  i: { shape: [[0,0,0,0],[1,1,1,1],[0,0,0,0],[0,0,0,0]], color: 0 },
+  t: { shape: [[0, 1, 0], [1, 1, 1],[0,0,0]], color: 3 },
+  s: { shape: [[0, 1, 1], [1, 1, 0],[0,0,0]], color: 1 },
+  z: { shape: [[1, 1, 0], [0, 1, 1],[0,0,0]], color: 2 },
+  j: { shape: [[1,0,0], [1, 1,1], [0,0,0]], color: 5 },
+  l: { shape: [[0, 0,1], [1, 1,1], [0,0,0]], color: 4 },
 };
 
-// each row is its own array so writing to one cell doesn't touch every row
+// each square is its own object so writing to one cell doesn't touch any other
 export const emptyBoard = (width: number, height: number): BoardState =>
-  Array.from({ length: height }, () => Array<Square>(width).fill(Square.empty));
+  Array.from({ length: height }, () =>
+    Array.from({ length: width }, () => ({ state: SquareState.empty, color: 0 })),
+  );
 
 // the piece can turn and slide every step, but only falls one row every this many steps
 const GRAVITY_EVERY = 3;
@@ -38,7 +46,7 @@ export class Tetris {
   private rotationsLeft = 0;
   private tick = 0;
   // one of each tetromino in random order; spawn() pops from it and refills when empty
-  private bag: Tetromino[] = [];
+  private bag: Piece[] = [];
 
   private width: number;
 
@@ -57,8 +65,8 @@ export class Tetris {
         [this.bag[i], this.bag[j]] = [this.bag[j], this.bag[i]];
       }
     }
-    const shape = this.bag.pop()!;
-    this.active = { shape, x: Math.floor((this.width - shape[0].length) / 2), y: 0 };
+    const { shape, color } = this.bag.pop()!;
+    this.active = { shape, color, x: Math.floor((this.width - shape[0].length) / 2), y: 0 };
     const target = generateMove(this.board, this.active);
     this.targetX = target?.move.x ?? this.active.x;
     this.rotationsLeft = target?.rotations ?? 0;
@@ -72,13 +80,13 @@ export class Tetris {
 
     const state = this.board.map((row) => [...row]);
     if (this.active) {
-      const { shape, x, y } = this.active;
+      const { shape, color, x, y } = this.active;
 
       // draw active shape
       shape.forEach((row, dy) =>
         row.forEach((square, dx) => {
-          if (square !== Square.empty) {
-            state[y + dy][x + dx] = Square.active;
+          if (square) {
+            state[y + dy][x + dx] = { state: SquareState.active, color };
           }
         }),
       );
@@ -108,7 +116,7 @@ export class Tetris {
       } else {
         this.board = place(this.board, this.active);
         // drop full rows and pad the top with empty ones
-        const kept = this.board.filter((row) => row.includes(Square.empty));
+        const kept = this.board.filter((row) => row.some((square) => square.state === SquareState.empty));
         this.board = [...emptyBoard(this.width, this.board.length - kept.length), ...kept];
         this.active = null;
         return state;

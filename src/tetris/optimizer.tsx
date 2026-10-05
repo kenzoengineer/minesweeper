@@ -1,4 +1,4 @@
-import { ActiveContainer, BoardState, Square, Tetromino } from "./game";
+import { ActiveContainer, BoardState, SquareState, Tetromino } from "./game";
 
 /**
  * helper function to count the y position of the highest tile
@@ -6,7 +6,7 @@ import { ActiveContainer, BoardState, Square, Tetromino } from "./game";
  */
 const highestTile = (col: number, board: BoardState): number => {
   for (let y = 0; y < board.length; y++) {
-    if (board[y][col] !== Square.empty) {
+    if (board[y][col].state !== SquareState.empty) {
       return y;
     }
   }
@@ -21,7 +21,7 @@ const countHoles = (board: BoardState): number => {
   let count = 0;
   for (let y = 1; y < board.length; y++) { // skip first row
     for (let x = 0; x < board[y].length; x++) {
-      if (board[y][x] === Square.empty && board[y - 1][x] !== Square.empty) {
+      if (board[y][x].state === SquareState.empty && board[y - 1][x].state !== SquareState.empty) {
         count++;
       }
     }
@@ -60,7 +60,7 @@ const countHeight = (board: BoardState): number => {
 const countCompleted = (board: BoardState): number => {
   let accum = 0;
   for (let y = 0; y < board.length; y++) {
-    if (board[y].every(i => i !== Square.empty)) {
+    if (board[y].every(i => i.state !== SquareState.empty)) {
       accum++;
     }
   }
@@ -82,12 +82,12 @@ export const fits = (board: BoardState, active: ActiveContainer): boolean => {
   const { shape, x, y } = active;
   for (let dy = 0; dy < shape.length; dy++) {
     for (let dx = 0; dx < shape[dy].length; dx++) {
-      if (shape[dy][dx] === Square.empty) {
+      if (!shape[dy][dx]) {
         continue;
       }
       const bx = x + dx;
       const by = y + dy;
-      if (by < 0 || by >= board.length || bx < 0 || bx >= board[by].length || board[by][bx] === Square.placed) {
+      if (by < 0 || by >= board.length || bx < 0 || bx >= board[by].length || board[by][bx].state === SquareState.placed) {
         return false;
       }
     }
@@ -101,11 +101,11 @@ export const canFall = (board: BoardState, active: ActiveContainer): boolean =>
 // a copy of the board with the piece locked in
 export const place = (board: BoardState, active: ActiveContainer): BoardState => {
   const next = board.map((row) => [...row]);
-  const { shape, x, y } = active;
+  const { shape, color, x, y } = active;
   for (let dy = 0; dy < shape.length; dy++) {
     for (let dx = 0; dx < shape[dy].length; dx++) {
-      if (shape[dy][dx] !== Square.empty) {
-        next[y + dy][x + dx] = Square.placed;
+      if (shape[dy][dx]) {
+        next[y + dy][x + dx] = { state: SquareState.placed, color };
       }
     }
   }
@@ -115,7 +115,7 @@ export const place = (board: BoardState, active: ActiveContainer): BoardState =>
 export const rotateClockwise = (shape: Tetromino): Tetromino => {
   const rows = shape.length;
   const cols = shape[0].length;
-  const rotated = Array.from({ length: cols }, () => Array<Square>(rows));
+  const rotated = Array.from({ length: cols }, () => Array<number>(rows));
   for (let r = 0; r < rows; r++) {
     for (let c = 0; c < cols; c++) {
       rotated[c][rows - 1 - r] = shape[r][c];

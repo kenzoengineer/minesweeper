@@ -1,6 +1,17 @@
 import { memo } from "react";
 import { CELL_SIZE } from "../DimensionsContext";
-import { BoardState } from "./game";
+import { BoardState, SquareState } from "./game";
+
+// copied from the minesweeper palette, indexed by Square.color
+const COLORS = [
+  "bg-[#7cc7ff]",
+  "bg-[#66c266]",
+  "bg-[#ff7788]",
+  "bg-[#ee88ff]",
+  "bg-[#ffaa66]",
+  "bg-[#ffdd66]",
+  "bg-white",
+];
 
 interface TetrisBoardProps {
   width: number,
@@ -29,7 +40,7 @@ const Grid = memo(({ width, height, state }: { width: number; height: number, st
           {Array.from({ length: width }, (_, x) => (
             <div
               key={`cell-${x}-${y}`}
-              className={`${state[y][x] == 0 ? "bg-[#101010]" : "bg-white"} w-10 h-10 shrink-0`}
+              className={`${state[y][x].state === SquareState.empty ? "bg-[#101010]" : COLORS[state[y][x].color]} w-10 h-10 shrink-0`}
             />
           ))}
         </div>
