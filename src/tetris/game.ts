@@ -18,14 +18,15 @@ export type ActiveContainer = { shape: Tetromino; color: number; x: number; y: n
 
 type Piece = { shape: Tetromino; color: number };
 
+// colors index into the palette in TetrisBoard, matching the standard tetris colors
 const Tetrominos: Record<string, Piece> = {
-  o: { shape: [[1,1],[1,1]], color: 6 },
+  o: { shape: [[1,1],[1,1]], color: 1 },
   i: { shape: [[0,0,0,0],[1,1,1,1],[0,0,0,0],[0,0,0,0]], color: 0 },
-  t: { shape: [[0, 1, 0], [1, 1, 1],[0,0,0]], color: 3 },
-  s: { shape: [[0, 1, 1], [1, 1, 0],[0,0,0]], color: 1 },
-  z: { shape: [[1, 1, 0], [0, 1, 1],[0,0,0]], color: 2 },
+  t: { shape: [[0, 1, 0], [1, 1, 1],[0,0,0]], color: 2 },
+  s: { shape: [[0, 1, 1], [1, 1, 0],[0,0,0]], color: 3 },
+  z: { shape: [[1, 1, 0], [0, 1, 1],[0,0,0]], color: 4 },
   j: { shape: [[1,0,0], [1, 1,1], [0,0,0]], color: 5 },
-  l: { shape: [[0, 0,1], [1, 1,1], [0,0,0]], color: 4 },
+  l: { shape: [[0, 0,1], [1, 1,1], [0,0,0]], color: 6 },
 };
 
 // each square is its own object so writing to one cell doesn't touch any other

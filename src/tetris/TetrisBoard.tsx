@@ -2,15 +2,15 @@ import { memo } from "react";
 import { CELL_SIZE } from "../DimensionsContext";
 import { BoardState, SquareState } from "./game";
 
-// copied from the minesweeper palette, indexed by Square.color
+// standard tetris colors, indexed by Square.color
 const COLORS = [
-  "bg-[#7cc7ff]",
-  "bg-[#66c266]",
-  "bg-[#ff7788]",
-  "bg-[#ee88ff]",
-  "bg-[#ffaa66]",
-  "bg-[#ffdd66]",
-  "bg-white",
+  "bg-cyan-400", // i
+  "bg-yellow-400", // o
+  "bg-purple-500", // t
+  "bg-green-500", // s
+  "bg-red-500", // z
+  "bg-blue-500", // j
+  "bg-orange-500", // l
 ];
 
 interface TetrisBoardProps {
