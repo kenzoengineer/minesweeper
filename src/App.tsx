@@ -1,17 +1,24 @@
 import Header from "./Header";
-import { CONTENT_MAX_WIDTH, DimensionsProvider } from "./DimensionsContext";
+import { CELL_SIZE, DimensionsProvider, useDimensions } from "./DimensionsContext";
 import Career from "./Career";
-import Tetris from "./tetris/Tetris";
+import Skills from "./Skills";
+
+const Content = () => {
+  const { contentCols } = useDimensions();
+  return (
+    <div className="mx-auto" style={{ width: contentCols * CELL_SIZE }}>
+      <Career />
+      <Skills />
+    </div>
+  );
+};
 
 function App() {
   return (
     <DimensionsProvider>
       <Header />
       <main className="bg-[#1f1f1f]">
-        <div className="mx-auto px-5 md:px-10" style={{ maxWidth: CONTENT_MAX_WIDTH }}>
-          <Career />
-          <Tetris />
-        </div>
+        <Content />
       </main>
     </DimensionsProvider>
   );

@@ -1,4 +1,4 @@
-import { CELL_SIZE, CONTENT_MAX_WIDTH, useDimensions } from "./DimensionsContext";
+import { CELL_SIZE, useDimensions } from "./DimensionsContext";
 import Chess from "./chess/Chess";
 
 interface Role {
@@ -31,6 +31,15 @@ const PAST_EXPERIENCES: ExperienceProps[] = [
 ];
 
 const CHESS_ROWS = Math.round(256 / CELL_SIZE);
+
+// splits `cols` tiles into `count` grid columns separated by one-tile gaps, wider columns first
+const tileColumns = (cols: number, count: number) => {
+  const tiles = cols - (count - 1);
+  return Array.from(
+    { length: count },
+    (_, i) => `${(Math.floor(tiles / count) + (i < tiles % count ? 1 : 0)) * CELL_SIZE}px`,
+  ).join(" ");
+};
 
 const Experience = ({ company, location, roles, featured }: ExperienceProps) => {
   return (
@@ -79,24 +88,18 @@ const Timeline = ({ roles }: { roles: Role[] }) => {
 };
 
 const Career = () => {
-  const { windowWidth } = useDimensions();
-  // matches the px-5 md:px-10 padding on the content column in App
-  const padding = windowWidth >= 768 ? 40 : 20;
-  const contentWidth = Math.min(windowWidth, CONTENT_MAX_WIDTH) - 2 * padding;
-  const chessCols = Math.round(contentWidth / CELL_SIZE);
+  const { windowWidth, contentCols: cols } = useDimensions();
+  const perRow = windowWidth >= 1024 ? 4 : windowWidth >= 640 ? 2 : 1;
   return (
-    <div className="flex flex-col gap-2 py-5 md:py-10">
+    <div className="flex flex-col gap-10 py-5 md:py-10">
       <Experience {...SENTRY} featured />
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2">
+      <div className="grid gap-10" style={{ gridTemplateColumns: tileColumns(cols, perRow) }}>
         {PAST_EXPERIENCES.map((exp) => (
           <Experience key={exp.company} {...exp} />
         ))}
       </div>
-      <div
-        className="bg-[#101010] self-center"
-        style={{ width: chessCols * CELL_SIZE, height: CHESS_ROWS * CELL_SIZE }}
-      >
-        <Chess width={chessCols} height={CHESS_ROWS} />
+      <div className="bg-[#101010]" style={{ height: CHESS_ROWS * CELL_SIZE }}>
+        <Chess width={cols} height={CHESS_ROWS} />
       </div>
     </div>
   );
