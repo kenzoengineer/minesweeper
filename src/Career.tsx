@@ -41,16 +41,25 @@ const tileColumns = (cols: number, count: number) => {
   ).join(" ");
 };
 
+// same palette as the skill markers
+const ACCENT_COLORS = ["bg-red-500", "bg-green-500", "bg-blue-500", "bg-yellow-400"];
+
 const Experience = ({ company, location, roles, featured }: ExperienceProps) => {
   return (
-    <div className={`bg-[#101010] text-white flex flex-col p-5 md:p-10 ${featured ? "md:flex-row min-h-64" : ""}`}>
-      <div>
+    <div
+      className={`bg-[#101010] text-white p-5 md:p-10 ${
+        featured ? "grid lg:grid-cols-[1fr_auto] lg:grid-rows-[auto_1fr] min-h-64" : "flex flex-col"
+      }`}
+    >
+      <div className={featured ? "" : "mb-4"}>
         <h3 className={`font-bbh-hegarty uppercase ${featured ? "text-5xl sm:text-7xl" : "text-xl"}`}>{company}</h3>
         <p className={featured ? "text-xl" : "text-xs text-neutral-500"}>{location}</p>
-        <div className={`w-full my-2 ${featured ? "h-1 bg-red-500" : "h-0.5 bg-neutral-700"}`} />
       </div>
       {featured ? (
-        <Timeline roles={roles} />
+        <>
+          <Timeline roles={roles} />
+
+        </>
       ) : (
         roles.map((role) => (
           <div key={role.date} className="flex flex-col flex-1">
@@ -65,22 +74,14 @@ const Experience = ({ company, location, roles, featured }: ExperienceProps) => 
 
 const Timeline = ({ roles }: { roles: Role[] }) => {
   return (
-    <ol className="w-full mt-8 md:w-1/2 md:mt-0 md:ml-auto md:mr-6 self-center flex flex-row-reverse">
+    <ol className="flex flex-row-reverse md:justify-end gap-5 md:gap-10 mt-8 lg:mt-0 lg:col-start-2 lg:row-start-1 lg:row-span-2 self-end">
       {roles.map((role, i) => (
-        <li key={role.date} className="flex-1 flex flex-col items-center text-center">
-          <p className="text-xs uppercase tracking-widest text-neutral-500">{role.date}</p>
-          <div className="relative w-full h-2.5 my-3">
-            {i < roles.length - 1 && (
-              <div className="absolute left-0 right-1/2 top-1/2 h-px bg-neutral-700" />
-            )}
-            {i > 0 && <div className="absolute left-1/2 right-0 top-1/2 h-px bg-neutral-700" />}
-            <div
-              className={`absolute left-1/2 top-0 -translate-x-1/2 w-2.5 h-2.5 ${
-                i === 0 ? "bg-red-500" : "bg-neutral-500"
-              }`}
-            />
-          </div>
+        <li key={role.date} className="flex-1 md:flex-none md:w-[120px] flex flex-col">
           <p className={`text-sm ${i === 0 ? "text-white" : "text-neutral-400"}`}>{role.title}</p>
+          <p className="text-xs uppercase tracking-widest text-neutral-500 mt-auto pt-1">{role.date}</p>
+          <div className="w-10 h-10 mt-4 flex items-center justify-center bg-neutral-700">
+            {i === 0 && <div className="w-1/3 h-1/3 rotate-45 bg-[#ff4040]" />}
+          </div>
         </li>
       ))}
     </ol>
