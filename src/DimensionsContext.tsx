@@ -4,6 +4,8 @@ import { useDebounced } from "./hooks/useDebounced";
 
 // px size of a single cell (Tailwind w-10 / h-10)
 export const CELL_SIZE = 40;
+// px max width of the centered content column below the header
+export const CONTENT_MAX_WIDTH = 1600;
 
 // board dimensions in cells, derived from the window and shared by every board
 type Dimensions = { width: number; height: number; windowWidth: number };

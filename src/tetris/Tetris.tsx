@@ -33,9 +33,7 @@ const Tetris = () => {
   }, [runLoop]);
 
   return (
-    <div className="bg-[#1f1f1f]">
-      <TetrisBoard width={WIDTH} height={HEIGHT} state={boardState} />
-    </div>
+    <TetrisBoard width={WIDTH} height={HEIGHT} state={boardState} />
   );
 };
 

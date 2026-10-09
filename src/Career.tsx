@@ -1,4 +1,4 @@
-import { CELL_SIZE, useDimensions } from "./DimensionsContext";
+import { CELL_SIZE, CONTENT_MAX_WIDTH, useDimensions } from "./DimensionsContext";
 import Chess from "./chess/Chess";
 
 interface Role {
@@ -80,24 +80,23 @@ const Timeline = ({ roles }: { roles: Role[] }) => {
 
 const Career = () => {
   const { windowWidth } = useDimensions();
-  // matches the p-5 md:p-10 padding on the wrapper below
+  // matches the px-5 md:px-10 padding on the content column in App
   const padding = windowWidth >= 768 ? 40 : 20;
-  const chessCols = Math.round((windowWidth - 2 * padding) / CELL_SIZE);
+  const contentWidth = Math.min(windowWidth, CONTENT_MAX_WIDTH) - 2 * padding;
+  const chessCols = Math.round(contentWidth / CELL_SIZE);
   return (
-    <div className="bg-[#1f1f1f]">
-      <div className="flex flex-col gap-2 p-5 md:p-10">
-        <Experience {...SENTRY} featured />
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2">
-          {PAST_EXPERIENCES.map((exp) => (
-            <Experience key={exp.company} {...exp} />
-          ))}
-        </div>
-        <div
-          className="bg-[#101010] self-center"
-          style={{ width: chessCols * CELL_SIZE, height: CHESS_ROWS * CELL_SIZE }}
-        >
-          <Chess width={chessCols} height={CHESS_ROWS} />
-        </div>
+    <div className="flex flex-col gap-2 py-5 md:py-10">
+      <Experience {...SENTRY} featured />
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2">
+        {PAST_EXPERIENCES.map((exp) => (
+          <Experience key={exp.company} {...exp} />
+        ))}
+      </div>
+      <div
+        className="bg-[#101010] self-center"
+        style={{ width: chessCols * CELL_SIZE, height: CHESS_ROWS * CELL_SIZE }}
+      >
+        <Chess width={chessCols} height={CHESS_ROWS} />
       </div>
     </div>
   );
