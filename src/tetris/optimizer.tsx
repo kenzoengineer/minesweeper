@@ -14,14 +14,15 @@ const highestTile = (col: number, board: BoardState): number => {
 }
 
 /**
- * how many holes, aka empty tiles with tiles above them.
+ * how many holes, aka empty tiles with a tile somewhere above them in the same column.
+ * a gap 2 tall counts as 2 holes.
  * lower is better
  */
 const countHoles = (board: BoardState): number => {
   let count = 0;
-  for (let y = 1; y < board.length; y++) { // skip first row
-    for (let x = 0; x < board[y].length; x++) {
-      if (board[y][x].state === SquareState.empty && board[y - 1][x].state !== SquareState.empty) {
+  for (let x = 0; x < board[0].length; x++) {
+    for (let y = highestTile(x, board) + 1; y < board.length; y++) {
+      if (board[y][x].state === SquareState.empty) {
         count++;
       }
     }
